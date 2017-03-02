@@ -53,7 +53,7 @@ class FailedCommandResult(CommandResult):
         self.error_description = error_description
 
 
-class CommandHandler:
+class CustomExecutionServerCommandHandler:
     @abstractmethod
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
         """

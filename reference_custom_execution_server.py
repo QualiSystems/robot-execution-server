@@ -6,7 +6,7 @@ import subprocess
 import sys
 import time
 
-from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CommandHandler, PassedCommandResult
+from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult
 
 
 class ProcessRunner():
@@ -44,7 +44,7 @@ class ProcessRunner():
 process_runner = ProcessRunner()
 
 
-class MyCommandHandler(CommandHandler):
+class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler):
 
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
         print 'execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json)
@@ -81,7 +81,7 @@ server = CustomExecutionServer(server_name=o['name'],
                                server_type=o['type'],
                                server_capacity=int(o['capacity']),
 
-                               command_handler=MyCommandHandler(),
+                               command_handler=MyCustomExecutionServerCommandHandler(),
 
                                logger=Logger(),
 
