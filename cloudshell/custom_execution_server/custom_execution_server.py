@@ -53,7 +53,7 @@ class FailedCommandResult(CommandResult):
         self.error_description = error_description
 
 
-class ExecuteCommandHandler:
+class CommandHandler:
     @abstractmethod
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
         """
@@ -78,8 +78,6 @@ class ExecuteCommandHandler:
         """
         raise Exception('ExecuteCommandHandler.execute() was not implemented')
 
-
-class StopCommandHandler:
     @abstractmethod
     def stop(self, execution_id):
         """
@@ -93,7 +91,7 @@ class StopCommandHandler:
 
 class CustomExecutionServer:
     def __init__(self, server_name, server_description, server_type, server_capacity,
-                 execute_command_handler, stop_command_handler,
+                 command_handler,
                  logger,
                  cloudshell_host='localhost',
                  cloudshell_port=9000,
@@ -109,8 +107,7 @@ class CustomExecutionServer:
         :param server_type: str : an execution server type registered manually in CloudShell beforehand
         :param server_capacity: int : number of concurrent commands CloudShell should send us
 
-        :param execute_command_handler: ExecuteCommandHandler : your custom implementation of ExecuteCommandHandler
-        :param stop_command_handler: StopCommandHandler : your custom implementation of StopCommandHandler
+        :param command_handler: CommandHandler : your custom implementation of CommandHandler
 
         :param logger: logging.Logger
 
@@ -135,8 +132,7 @@ class CustomExecutionServer:
         self._server_capacity = server_capacity
         self._logger = logger
 
-        self._execute_command_handler = execute_command_handler
-        self._stop_command_handler = stop_command_handler
+        self._command_handler = command_handler
 
         self._execution_ids = set()
 
@@ -246,7 +242,7 @@ class CustomExecutionServer:
                 th.daemon = True
                 th.start()
             elif command_type == 'stopExecution':
-                self._stop_command_handler.stop(execution_id)
+                self._command_handler.stop(execution_id)
             elif command_type == 'updateFiles':
                 # Must send this response or the execution server will be disabled
                 self._request('post', '/API/Execution/UpdateFilesEnded',
@@ -258,7 +254,7 @@ class CustomExecutionServer:
     def _command_worker_thread(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
         self._execution_ids.add(execution_id)
         try:
-            result = self._execute_command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json)
+            result = self._command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json)
         except Exception as e:
             result = ErrorCommandResult('Unhandled Python exception', str(e))
 
