@@ -55,7 +55,7 @@ class FailedCommandResult(CommandResult):
 
 class CustomExecutionServerCommandHandler:
     @abstractmethod
-    def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
+    def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         """
         Executes the requested command.
 
@@ -73,17 +73,19 @@ class CustomExecutionServerCommandHandler:
         :param username: str
         :param reservation_id: str : id of the reservation automatically reserved before starting the job
         :param reservation_json: str : If a reservation id was included, JSON describing the items in the reservation
+        :param logger:
         :return: CommandResult : Use one of CommandResult subclasses - indicate success or failure, include report data
         :raises: Exception : Will be automatically caught and wrapped in ErrorCommandResult
         """
         raise Exception('ExecuteCommandHandler.execute() was not implemented')
 
     @abstractmethod
-    def stop(self, execution_id):
+    def stop(self, execution_id, logger):
         """
         Send a message to a running execute() body corresponding to execution_id to signal it to exit
 
         :param execution_id:
+        :param logger:
         :return: None
         """
         pass
@@ -242,7 +244,7 @@ class CustomExecutionServer:
                 th.daemon = True
                 th.start()
             elif command_type == 'stopExecution':
-                self._command_handler.stop(execution_id)
+                self._command_handler.stop(execution_id, self._logger)
             elif command_type == 'updateFiles':
                 # Must send this response or the execution server will be disabled
                 self._request('post', '/API/Execution/UpdateFilesEnded',
@@ -254,7 +256,7 @@ class CustomExecutionServer:
     def _command_worker_thread(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
         self._execution_ids.add(execution_id)
         try:
-            result = self._command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json)
+            result = self._command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
         except Exception as e:
             result = ErrorCommandResult('Unhandled Python exception', str(e))
 

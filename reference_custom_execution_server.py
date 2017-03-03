@@ -46,8 +46,8 @@ process_runner = ProcessRunner()
 
 class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler):
 
-    def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
-        print 'execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json)
+    def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
+        logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         t = test_path
         if test_arguments:
             t += ' ' + test_arguments
@@ -56,8 +56,8 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         print 'execute result: %s\n' % output
         return PassedCommandResult('%s.txt' % now, output)
 
-    def stop(self, execution_id):
-        print 'stop %s\n' % execution_id
+    def stop(self, execution_id, logger):
+        logger.info('stop %s\n' % execution_id)
         process_runner.stop(execution_id)
 
 
