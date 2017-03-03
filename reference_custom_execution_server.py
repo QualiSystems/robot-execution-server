@@ -53,7 +53,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             t += ' ' + test_arguments
         output, retcode = process_runner.execute(t, execution_id)
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
-        print 'execute result: %s\n' % output
+        print('execute result: %s\n' % output)
         return PassedCommandResult('%s.txt' % now, output)
 
     def stop(self, execution_id, logger):
@@ -63,14 +63,14 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
 class Logger:
     def warn(self, s):
-        print s + '\n'
+        print(s + '\n')
     def debug(self, s):
-        print s + '\n'
+        print(s + '\n')
         pass
     def info(self, s):
-        print s + '\n'
+        print(s + '\n')
     def error(self, s):
-        print s + '\n'
+        print(s + '\n')
 
 
 with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
@@ -111,4 +111,8 @@ if len(sys.argv) > 1:
 else:
     server.start()
     print ("Press enter to exit...")
-    raw_input('')
+    try:
+        input()
+    except:
+        pass
+

@@ -138,7 +138,7 @@ class CustomExecutionServer:
 
         self._execution_ids = set()
 
-        self._counter = itertools.count()
+        # self._counter = itertools.count()
 
         self._token = None
         self._token = self._request('put', '/API/Auth/login',
@@ -146,7 +146,7 @@ class CustomExecutionServer:
                                         'Username': cloudshell_username,
                                         'Password': cloudshell_password,
                                         'Domain': cloudshell_domain,
-                                    })).content.replace('"', '')
+                                    })).text.replace('"', '')
 
         if auto_register:
             try:
@@ -218,7 +218,7 @@ class CustomExecutionServer:
             if r.status_code == 204:
                 continue
 
-            o = json.loads(r.content)
+            o = json.loads(r.text)
             if not o:
                 continue
 
@@ -229,7 +229,7 @@ class CustomExecutionServer:
                 resid = o.get('ReservationId', '')
                 if resid:
                     r = self._request('get', '/API/Execution/Reservations/%s' % resid)
-                    reservation_json = r.content
+                    reservation_json = r.text
                 else:
                     reservation_json = ''
 
@@ -282,7 +282,8 @@ class CustomExecutionServer:
             self._execution_ids.remove(execution_id)
 
     def _request(self, method, path, data=None, headers=None, **kwargs):
-        counter = self._counter.next()
+        # counter = self._counter.next()
+        counter = 0
         if not headers:
             headers = {
                 'Accept': 'application/json',
@@ -299,7 +300,7 @@ class CustomExecutionServer:
         self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, headers, data))
 
         rv = requests.request(method, url, data=data, headers=headers, **kwargs)
-        self._logger.debug('Result %d: %d: %s' % (counter, rv.status_code, rv.content))
+        self._logger.debug('Result %d: %d: %s' % (counter, rv.status_code, rv.text))
         if rv.status_code >= 400:
-            raise Exception('Error: %d: %s' % (rv.status_code, rv.content))
+            raise Exception('Error: %d: %s' % (rv.status_code, rv.text))
         return rv

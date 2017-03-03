@@ -19,21 +19,20 @@ class Handler(CustomExecutionServerCommandHandler):
         logger.info('Test arguments: %s' % test_arguments)
         return PassedCommandResult('report.txt', 'x')
 
-
     def stop(self, execution_id, logger):
         pass
 
 
 class Logger:
     def warn(self, s):
-        print s + '\n'
+        print(s + '\n')
     def debug(self, s):
-        # print s + '\n'
+        # print(s + '\n')
         pass
     def info(self, s):
-        print s + '\n'
+        print(s + '\n')
     def error(self, s):
-        print s + '\n'
+        print(s + '\n')
 
 with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
     o = json.load(f)
@@ -55,4 +54,7 @@ server = CustomExecutionServer(server_name=o['name'],
 
                                auto_register=True,
                                auto_start=True)
-raw_input('')
+try:
+    input()
+except:
+    pass
