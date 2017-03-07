@@ -54,6 +54,10 @@ class FailedCommandResult(CommandResult):
 
 
 class CustomExecutionServerCommandHandler:
+
+    def __init__(self):
+        pass
+
     @abstractmethod
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         """
@@ -138,6 +142,9 @@ class CustomExecutionServer:
 
         self._execution_ids = set()
 
+        self._running = False
+        self._threads = []
+
         # self._counter = itertools.count()
 
         self._token = None
@@ -182,15 +189,25 @@ class CustomExecutionServer:
                       }))
 
     def start(self):
+        self._threads = []
+        self._running = True
         th = threading.Thread(target=self._status_update_thread)
-        th.daemon = True
+        # th.daemon = True
         th.start()
+        self._threads.append(th)
         th = threading.Thread(target=self._command_poll_thread)
-        th.daemon = True
+        # th.daemon = True
         th.start()
+        self._threads.append(th)
+
+    def stop(self):
+        self._running = False
+        for th in self._threads:
+            th.join()
+        self._threads = []
 
     def _status_update_thread(self):
-        while True:
+        while self._running:
             try:
                 self._request('post', '/API/Execution/Status',
                               data=json.dumps({
@@ -199,19 +216,24 @@ class CustomExecutionServer:
                               }))
             except Exception as e:
                 self._logger.warn(str(e))
-            sleep(60)
+
+            for _ in range(60):
+                sleep(1)
+                if not self._running:
+                    break
 
     def _command_poll_thread(self):
-        while True:
+        while self._running:
             try:
                 self._logger.info('Poll...')
+
                 r = self._request('delete', '/API/Execution/PendingCommand',
                                   data=json.dumps({
                                       'Name': self._server_name,
                                   }))
                 self._logger.info('Poll returned')
-            except:
-                self._logger.warn('Sleeping 30 seconds to wait for CloudShell to recover...')
+            except Exception as e:
+                self._logger.warn('%s: Sleeping 30 seconds to wait for CloudShell to recover...' % str(e))
                 sleep(30)
                 continue
 

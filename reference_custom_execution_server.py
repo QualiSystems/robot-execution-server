@@ -41,24 +41,25 @@ class ProcessRunner():
                 os.killpg(process.pid, signal.SIGTERM)
 
 
-process_runner = ProcessRunner()
-
-
 class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler):
+
+    def __init__(self):
+        CustomExecutionServerCommandHandler.__init__(self)
+        self._process_runner = ProcessRunner()
 
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         t = test_path
         if test_arguments:
             t += ' ' + test_arguments
-        output, retcode = process_runner.execute(t, execution_id)
+        output, retcode = self._process_runner.execute(t, execution_id)
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
         print('execute result: %s\n' % output)
         return PassedCommandResult('%s.txt' % now, output)
 
     def stop(self, execution_id, logger):
         logger.info('stop %s\n' % execution_id)
-        process_runner.stop(execution_id)
+        self._process_runner.stop(execution_id)
 
 
 class Logger:
@@ -73,46 +74,62 @@ class Logger:
         print(s + '\n')
 
 
-with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
-    o = json.load(f)
+# with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
+#     o = json.load(f)
 
-server = CustomExecutionServer(server_name=o['name'],
-                               server_description=o['description'],
-                               server_type=o['type'],
-                               server_capacity=int(o['capacity']),
+o = json.loads('''{
+"host" : "http://localhost:9000",
+"username" : "admin",
+"password" : "admin",
+"domain" : "Global",
+"name" : "MyCES1",
+"description" : "Reference implementation CES in Python",
+"type" : "Python",
+"capacity" : "5"
+}
+''')
 
-                               command_handler=MyCustomExecutionServerCommandHandler(),
+if __name__ == '__main__':
+    server = CustomExecutionServer(server_name=o['name'],
+                                   server_description=o['description'],
+                                   server_type=o['type'],
+                                   server_capacity=int(o['capacity']),
 
-                               logger=Logger(),
+                                   command_handler=MyCustomExecutionServerCommandHandler(),
 
-                               cloudshell_host=o['host'].split('/')[-1].split(':')[0],
-                               cloudshell_port=int(o['host'].split('/')[-1].split(':')[1]),
-                               cloudshell_username=o['username'],
-                               cloudshell_password=o['password'],
-                               cloudshell_domain=o['domain'],
+                                   logger=Logger(),
 
-                               auto_register=False,
-                               auto_start=False)
+                                   cloudshell_host=o['host'].split('/')[-1].split(':')[0],
+                                   cloudshell_port=int(o['host'].split('/')[-1].split(':')[1]),
+                                   cloudshell_username=o['username'],
+                                   cloudshell_password=o['password'],
+                                   cloudshell_domain=o['domain'],
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'register':
-        server.register()
-        print('Successfully registered.')
-        sys.exit(0)
-    elif sys.argv[1] == 'update':
-        server.update()
-        print('Successfully updated.')
-        sys.exit(0)
+                                   auto_register=False,
+                                   auto_start=False)
+
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'register':
+            server.register()
+            print('Successfully registered.')
+            sys.exit(0)
+        elif sys.argv[1] == 'update':
+            server.update()
+            print('Successfully updated.')
+            sys.exit(0)
+        else:
+            print('Python custom execution server can take one of two optional arguments:')
+            print('register - register the execution server with details from config.json')
+            print('update - update the details of the execution server to those in config.json')
+            sys.exit(1)
     else:
-        print('Python custom execution server can take one of two optional arguments:')
-        print('register - register the execution server with details from config.json')
-        print('update - update the details of the execution server to those in config.json')
-        sys.exit(1)
-else:
-    server.start()
-    print ("Press enter to exit...")
-    try:
-        input()
-    except:
-        pass
-
+        server.start()
+        print ("Press enter to exit...")
+        if sys.version_info.major == 2:
+            raw_input()
+        else:
+            input()
+        print ("Stopping, please wait up to 2 minutes...")
+        server.stop()
+        print ("Stopped")
