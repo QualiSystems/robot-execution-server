@@ -3,6 +3,7 @@ import py2exe  # Don't remove
 from py2exe.build_exe import Target
 
 main_module = "testservice"
+main_file = "testservice.py"
 
 myservice = Target(
     # used for the versioninfo resource
@@ -10,11 +11,12 @@ myservice = Target(
     # what to build. For a service, the module name (not the filename) must be specified!
     modules = [main_module],
     cmdline_style='pywin32',
-    options = {'py2exe': {'bundle_files': 1, 'compressed': True}},
-    windows = [{'script': "single.py"}],
-    zipfile = None,
+
 )
 
 setup(
     service = [myservice],
+    options={'py2exe': {'bundle_files': 1, 'compressed': True}},
+    windows=[{'script': main_file}],
+    zipfile=None,
     )
