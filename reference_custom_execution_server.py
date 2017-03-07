@@ -74,20 +74,20 @@ class Logger:
         print(s + '\n')
 
 
-# with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
-#     o = json.load(f)
+with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
+    o = json.load(f)
 
-o = json.loads('''{
-"host" : "http://localhost:9000",
-"username" : "admin",
-"password" : "admin",
-"domain" : "Global",
-"name" : "MyCES1",
-"description" : "Reference implementation CES in Python",
-"type" : "Python",
-"capacity" : "5"
-}
-''')
+# o = json.loads('''{
+# "host" : "http://localhost:9000",
+# "username" : "admin",
+# "password" : "admin",
+# "domain" : "Global",
+# "name" : "MyCES1",
+# "description" : "Reference implementation CES in Python",
+# "type" : "Python",
+# "capacity" : "5"
+# }
+# ''')
 
 if __name__ == '__main__':
     server = CustomExecutionServer(server_name=o['name'],
