@@ -3,6 +3,9 @@ import threading
 from abc import abstractmethod
 from time import sleep
 import sys
+import traceback
+
+import itertools
 
 if sys.version_info.major == 2:
     from urllib2 import Request
@@ -153,7 +156,7 @@ class CustomExecutionServer:
         self._running = False
         self._threads = []
 
-        # self._counter = itertools.count()
+        self._counter = itertools.count()
 
         self._token = None
         _, body = self._request('put', '/API/Auth/login',
@@ -287,8 +290,8 @@ class CustomExecutionServer:
         self._execution_ids.add(execution_id)
         try:
             result = self._command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
-        except Exception as e:
-            result = ErrorCommandResult('Unhandled Python exception', str(e))
+        except:
+            result = ErrorCommandResult('Unhandled Python exception', traceback.format_exc())
 
         try:
             self._request('put', '/API/Execution/FinishedExecution',
@@ -312,8 +315,10 @@ class CustomExecutionServer:
             self._execution_ids.remove(execution_id)
 
     def _request(self, method, path, data=None, headers=None, **kwargs):
-        # counter = self._counter.next()
-        counter = 0
+        if sys.version_info.major == 3:
+            counter = self._counter.__next__()
+        else:
+            counter = self._counter.next()
         if not headers:
             headers = {
                 'Accept': 'application/json',
@@ -329,12 +334,23 @@ class CustomExecutionServer:
 
         self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, headers, data))
 
+        if sys.version_info.major == 3:
+            if data:
+                data = data.encode('utf-8', 'replace')
+            else:
+                data = b''
         request = Request(url, data, headers)
         request.get_method = lambda: method.upper()
         response = urlopen(request)
         body = response.read()
+        if sys.version_info.major == 3:
+            if body:
+                body = body.decode('utf-8')
+            else:
+                body = ''
         code = response.getcode()
         response.close()
+
 
         self._logger.debug('Result %d: %d: %s' % (counter, code, body))
         if code >= 400:

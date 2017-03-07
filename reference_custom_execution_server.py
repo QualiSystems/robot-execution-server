@@ -22,8 +22,14 @@ class ProcessRunner():
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid)
         self._current_processes[identifier] = process
         output = ''
-        for line in iter(process.stdout.readline, b''):
-            output += line
+        if sys.version_info.major == 3:
+            for line in iter(process.stdout.readline, b''):
+                print('Output line: %s' % line)
+                line = line.decode('utf-8', 'replace')
+                output += line
+        else:
+            for line in iter(process.stdout.readline, b''):
+                output += line
         process.communicate()
         self._current_processes.pop(identifier, None)
         if identifier in self._stopping_processes:
@@ -125,7 +131,7 @@ if __name__ == '__main__':
             sys.exit(1)
     else:
         server.start()
-        print ("Press enter to exit...")
+        print ("\n\n\nPRESS <ENTER> TO EXIT...\n\n\n")
         if sys.version_info.major == 2:
             raw_input()
         else:
