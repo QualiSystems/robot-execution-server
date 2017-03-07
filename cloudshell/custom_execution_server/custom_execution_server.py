@@ -2,8 +2,16 @@ import json
 import threading
 from abc import abstractmethod
 from time import sleep
-import requests
-import itertools
+import sys
+
+if sys.version_info.major == 2:
+    from urllib2 import Request
+    from urllib2 import urlopen
+    from urllib import quote
+else:
+    from urllib.request import Request
+    from urllib.request import urlopen
+    from urllib.parse import quote
 
 
 class CommandResult:
@@ -148,12 +156,13 @@ class CustomExecutionServer:
         # self._counter = itertools.count()
 
         self._token = None
-        self._token = self._request('put', '/API/Auth/login',
+        _, body = self._request('put', '/API/Auth/login',
                                     data=json.dumps({
                                         'Username': cloudshell_username,
                                         'Password': cloudshell_password,
                                         'Domain': cloudshell_domain,
-                                    })).text.replace('"', '')
+                                    }))
+        self._token = body.replace('"', '')
 
         if auto_register:
             try:
@@ -227,7 +236,7 @@ class CustomExecutionServer:
             try:
                 self._logger.info('Poll...')
 
-                r = self._request('delete', '/API/Execution/PendingCommand',
+                code, body = self._request('delete', '/API/Execution/PendingCommand',
                                   data=json.dumps({
                                       'Name': self._server_name,
                                   }))
@@ -237,10 +246,10 @@ class CustomExecutionServer:
                 sleep(30)
                 continue
 
-            if r.status_code == 204:
+            if code == 204:
                 continue
 
-            o = json.loads(r.text)
+            o = json.loads(body)
             if not o:
                 continue
 
@@ -250,8 +259,7 @@ class CustomExecutionServer:
             if command_type == 'startExecution':
                 resid = o.get('ReservationId', '')
                 if resid:
-                    r = self._request('get', '/API/Execution/Reservations/%s' % resid)
-                    reservation_json = r.text
+                    _, reservation_json = self._request('get', '/API/Execution/Reservations/%s' % resid)
                 else:
                     reservation_json = ''
 
@@ -292,9 +300,9 @@ class CustomExecutionServer:
                               'ErrorName': result.error_name,
                           }))
             if result.report_filename:
-                self._request('post', '/API/Execution/ExecutionReport/%s/%s/%s' % (requests.utils.quote(self._server_name),
+                self._request('post', '/API/Execution/ExecutionReport/%s/%s/%s' % (quote(self._server_name),
                                                                                    execution_id,
-                                                                                   requests.utils.quote(result.report_filename)),
+                                                                                   quote(result.report_filename)),
                               headers={
                                   'Accept': 'application/json',
                                   'Content-Type': 'application/octet-stream',
@@ -321,8 +329,14 @@ class CustomExecutionServer:
 
         self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, headers, data))
 
-        rv = requests.request(method, url, data=data, headers=headers, **kwargs)
-        self._logger.debug('Result %d: %d: %s' % (counter, rv.status_code, rv.text))
-        if rv.status_code >= 400:
-            raise Exception('Error: %d: %s' % (rv.status_code, rv.text))
-        return rv
+        request = Request(url, data, headers)
+        request.get_method = lambda: method.upper()
+        response = urlopen(request)
+        body = response.read()
+        code = response.getcode()
+        response.close()
+
+        self._logger.debug('Result %d: %d: %s' % (counter, code, body))
+        if code >= 400:
+            raise Exception('Error: %d: %s' % (code, body))
+        return code, body

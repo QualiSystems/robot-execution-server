@@ -1,0 +1,10 @@
+{
+"host" : "http://localhost:9000",
+"username" : "admin",
+"password" : "admin",
+"domain" : "Global",
+"name" : "MyCES1",
+"description" : "Reference implementation CES in Python",
+"type" : "Python",
+"capacity" : "5"
+}

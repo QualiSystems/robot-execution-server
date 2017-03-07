@@ -7,6 +7,9 @@ from cloudshell.custom_execution_server.custom_execution_server import CustomExe
 
 class Handler(CustomExecutionServerCommandHandler):
 
+    def __init__(self):
+        CustomExecutionServerCommandHandler.__init__(self)
+
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         # logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         res = json.loads(reservation_json)

@@ -2,7 +2,7 @@ console.log('test input all parameters on load')
 
 console.log(data);
 
-function load_dropdown(s, bburl) {
+function load_dropdown(s, bburl, valuefunc) {
   $(s).empty()
   $(s).append('<option value="Loading..." selected="selected">Loading...</option>')
 
@@ -10,8 +10,8 @@ function load_dropdown(s, bburl) {
     'success': function(data, textStatus, oo) {
       $(s).empty()
       data['values'].forEach(function(a) {
-        console.log(a.name);
-        $(s).append('<option value="'+a.name+'">'+a.name+'</option>')
+        console.log(valuefunc(a));
+        $(s).append('<option value="'+valuefunc(a)+'">'+valuefunc(a)+'</option>')
       })
     },
     'error': function(oo, textStatus, errorThrown) {
@@ -34,7 +34,9 @@ function load_dropdown(s, bburl) {
       $(s).replaceWith('<select autocomplete="off" class="qs-editable-input-disabled valid" name="'+name+'" data-test-id="'+dti+'" data-editor-name="'+den+' data-input-control="'+dic+'" ></select>')
     }
     bburl = 'https://api.bitbucket.org/2.0/repositories/tutorials/tutorials.bitbucket.org/refs/branches'
-    load_dropdown(s, bburl)
+    load_dropdown(s, bburl, function(a) {
+        return a.name
+    })
 
   }
 });
@@ -47,8 +49,9 @@ if($(s).prop('tagName')!='SELECT') {
 }
 
 bburl = 'https://api.bitbucket.org/2.0/repositories/tutorials/tutorials.bitbucket.org/refs/branches'
-load_dropdown(s, bburl)
-
+load_dropdown(s, bburl, function(a) {
+    return '/c echo ' + a.name
+})
 
 
 return data;
