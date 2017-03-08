@@ -25,47 +25,43 @@ function load_dropdown(s, bburl, valuefunc) {
   })
 }
 
-// [ [input name 1, url for dropdown 1], [input name 2, url for dropdown 2], ... ]
+// [ [input name 1, url for dropdown 1, dropdown value extraction function 1],
+//   [input name 2, url for dropdown 2, dropdown value extraction function 2], ... ]
 [
-  ['TestVersion', 'https://api.bitbucket.org/2.0/repositories/tutorials/tutorials.bitbucket.org/refs/branches'], 
-  ['AnotherInput', 'https://api.bitbucket.org/2.0/repositories/Niam/libdodo/refs/branches']
-].forEach(function(title_url) {
-  title = title_url[0]
-  Array.from($('td[title="'+title+'"] + td .qs-editable-input-disabled')).forEach(function(s) {
-    //console.log($(s))
+  ['TestVersion', 'https://api.bitbucket.org/2.0/repositories/tutorials/tutorials.bitbucket.org/refs/branches', function(a) {return a.name;}],
+  ['AnotherInput', 'https://api.bitbucket.org/2.0/repositories/Niam/libdodo/refs/branches', function(a) {return a.name;}]
+].forEach(function(title_url_f) {
+  title = title_url_f[0]
+  bburl = title_url_f[1]
+  f = title_url_f[2]
+  Array.from($('td[title="'+title+'"] + td input.qs-editable-input-disabled')).forEach(function(s) {
+    name = $(s).attr('name')
+    den = $(s).attr('data-editor-name')
+    dti = $(s).attr('data-test-id')
+    dic = $(s).attr('data-input-control')
+    $(s).replaceWith('<select autocomplete="off" class="qs-editable-input-disabled valid" name="'+name+'" data-test-id="'+dti+'" data-editor-name="'+den+'" data-input-control="'+dic+'" ></select>')
+  });
+  Array.from($('td[title="'+title+'"] + td select.qs-editable-input-disabled')).forEach(function(s) {
+    load_dropdown(s, bburl, f)
+  });
+});
 
-    if($(s).prop('tagName') != 'SELECT') {
-      name = $(s).attr('name')
-      den = $(s).attr('data-editor-name')
-      dti = $(s).attr('data-test-id')
-      dic = $(s).attr('data-input-control')
-      //console.log(name)
-      //console.log(den)
-      //console.log(dti)
-      //console.log(dic)
-      
-      id = 'x' + Math.floor(Math.random()*1000000000)
-      $(s).replaceWith('<select id="' + id + '" autocomplete="off" class="qs-editable-input-disabled valid" name="'+name+'" data-test-id="'+dti+'" data-editor-name="'+den+'" data-input-control="'+dic+'" ></select>')
-      s = '#' + id
-    }
-    bburl = title_url[1]
-    load_dropdown(s, bburl, function(a) {
-      return a.name
-    })
-  })    
-})
+// [ [test name 1, url for dropdown 1, dropdown value extraction function 1],
+//   [test name 2, url for dropdown 2, dropdown value extraction function 2], ... ]
 
-// todo: locate arguments by test name
-id = 'ExecutionBatches_0__Tests_1__Parameter'
-s = '#ExecutionBatches_0__Tests_1__Parameter'
-name = 'ExecutionBatches[0].Tests[1].Parameter'
-if($(s).prop('tagName')!='SELECT') {
-  $(s).replaceWith('<select data-test-id="CustomTestParameter" id="' + id + '" name="' + name + '"></select>')
-}
+[
+  ['ping', 'https://api.bitbucket.org/2.0/repositories/tutorials/tutorials.bitbucket.org/refs/branches', function(a) {return a.name;}],
+  ['cmd /c', 'https://api.bitbucket.org/2.0/repositories/Niam/libdodo/refs/branches', function(a) {return a.name;}]
+].forEach(function(title_url_f) {
+    title = title_url_f[0]
+    bburl = title_url_f[1]
+    f = title_url_f[2]
+    e = $('div:has([value="' + title + '"]) + div input[data-test-id="CustomTestParameter"]')
+    id = e.attr('id')
+    name = e.attr('name')
+    e.replaceWith('<select data-test-id="CustomTestParameter" id="'+id+'" name="'+name+'"></select>')
+    load_dropdown('div:has([value="' + title + '"]) + div select[data-test-id="CustomTestParameter"]', bburl, f)
+});
 
-bburl = 'https://api.bitbucket.org/2.0/repositories/tutorials/tutorials.bitbucket.org/refs/branches'
-load_dropdown(s, bburl, function(a) {
-    return '/c echo ' + a.name
-})
 
 return data;
