@@ -6,7 +6,8 @@ import subprocess
 import sys
 import time
 
-from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult
+from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
+    FailedCommandResult
 
 import os
 
@@ -62,8 +63,11 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             t += ' ' + test_arguments
         output, retcode = self._process_runner.execute(t, execution_id)
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
-        print('execute result: %s\n' % output)
-        return PassedCommandResult('%s.txt' % now, output)
+        print('execute result: %d: %s\n' % (retcode, output))
+        if retcode != 0:
+            return FailedCommandResult('%s-status%d.txt' % (now, retcode), output)
+        else:
+            return PassedCommandResult('%s.txt' % now, output)
 
     def stop(self, execution_id, logger):
         logger.info('stop %s\n' % execution_id)
@@ -144,22 +148,23 @@ if __name__ == '__main__':
             if os.fork() == 0:
                 os.chdir('/')
                 os.umask(0)
-
-                def handler(signum, frame):
-                    print ("Stopping, please wait up to 2 minutes...")
-                    server.stop()
-                    print ("Stopped")
-
-                signal.signal(signal.SIGTERM, handler)
-                server.start()
-                print ('%s execution server %s started' % (servertype, servername))
-                print ('"kill -s SIGTERM %d" to stop. Shutdown takes up to 2 minutes.' % os.getpid())
             else:
                 os._exit(0)
         else:
             os._exit(0)
 
-        # if sys.version_info.major == 2:
+        def handler(signum, frame):
+            print ("Stopping, please wait up to 2 minutes...")
+            server.stop()
+            print ("Stopped")
+
+        sg = 30
+        signal.signal(sg, handler)
+        server.start()
+        print ('%s execution server %s started' % (servertype, servername))
+        print ('kill -s %d %d to stop. Shutdown takes up to 2 minutes.' % (sg, os.getpid()))
+
+            # if sys.version_info.major == 2:
         #     raw_input()
         # else:
         #     input()
