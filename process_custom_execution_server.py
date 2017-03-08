@@ -122,7 +122,7 @@ server = CustomExecutionServer(server_name=servername,
                                    auto_register=False,
                                    auto_start=False)
 
-if __file__ == '__main__':
+if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == 'register':
             server.register()
