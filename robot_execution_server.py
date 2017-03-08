@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServerCommandHandler, \
     CustomExecutionServer, PassedCommandResult
@@ -57,7 +58,11 @@ server = CustomExecutionServer(server_name=o['name'],
 
                                auto_register=True,
                                auto_start=True)
-try:
+print ("\n\n\nPRESS <ENTER> TO EXIT...\n\n\n")
+if sys.version_info.major == 2:
+    raw_input()
+else:
     input()
-except:
-    pass
+print ("Stopping, please wait up to 2 minutes...")
+server.stop()
+print ("Stopped")
