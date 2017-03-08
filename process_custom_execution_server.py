@@ -122,16 +122,7 @@ server = CustomExecutionServer(server_name=servername,
                                    auto_register=False,
                                    auto_start=False)
 
-def handler(signum, frame):
-    print ("Stopping, please wait up to 2 minutes...")
-    server.stop()
-    print ("Stopped")
-
-print '4: %d' % os.getpid()
-sg = 30
-signal.signal(sg, handler)
-
-if True:
+if __file__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == 'register':
             server.register()
@@ -177,7 +168,7 @@ if True:
         print ('kill -s %d %d to stop. Shutdown takes up to 2 minutes.' % (sg, os.getpid()))
 
         # only the main thread can receive signals
-        # while True:
+        while True:
             time.sleep(60)
 
             # if sys.version_info.major == 2:
