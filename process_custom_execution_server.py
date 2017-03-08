@@ -139,6 +139,14 @@ if __name__ == '__main__':
             print('update - update the details of the execution server to those in config.json')
             sys.exit(1)
     else:
+        def handler(signum, frame):
+            print ("Stopping, please wait up to 2 minutes...")
+            server.stop()
+            print ("Stopped")
+            os._exit(0)
+
+        sg = 30
+        signal.signal(sg, handler)
         try:
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
         except:
@@ -153,16 +161,13 @@ if __name__ == '__main__':
         else:
             os._exit(0)
 
-        def handler(signum, frame):
-            print ("Stopping, please wait up to 2 minutes...")
-            server.stop()
-            print ("Stopped")
-
-        sg = 30
-        signal.signal(sg, handler)
         server.start()
         print ('%s execution server %s started' % (servertype, servername))
         print ('kill -s %d %d to stop. Shutdown takes up to 2 minutes.' % (sg, os.getpid()))
+
+        # only the main thread can receive signals
+        # while True:
+            time.sleep(60)
 
             # if sys.version_info.major == 2:
         #     raw_input()
