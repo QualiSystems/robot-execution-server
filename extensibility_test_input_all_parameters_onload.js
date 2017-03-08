@@ -3,8 +3,8 @@ console.log('test input all parameters on load')
 // console.log(data);
 
 function load_dropdown(s, bburl, valuefunc) {
-  console.log('load_dropdown:')
-  console.log(s)
+  //console.log('load_dropdown:')
+  //console.log(s)
   $(s).empty()
   $(s).append('<option value="Loading..." selected="selected">Loading...</option>')
 
@@ -12,7 +12,7 @@ function load_dropdown(s, bburl, valuefunc) {
     'success': function(data, textStatus, oo) {
       $(s).empty()
       data['values'].forEach(function(a) {
-        console.log(valuefunc(a));
+        //console.log(valuefunc(a));
         $(s).append('<option value="'+valuefunc(a)+'">'+valuefunc(a)+'</option>')
       })
     },
@@ -25,24 +25,24 @@ function load_dropdown(s, bburl, valuefunc) {
   })
 }
 
-// [ [input name 2, url for dropdown 2], [input name 2, url for dropdown 2], ... ]
+// [ [input name 1, url for dropdown 1], [input name 2, url for dropdown 2], ... ]
 [
   ['TestVersion', 'https://api.bitbucket.org/2.0/repositories/tutorials/tutorials.bitbucket.org/refs/branches'], 
   ['AnotherInput', 'https://api.bitbucket.org/2.0/repositories/Niam/libdodo/refs/branches']
 ].forEach(function(title_url) {
   title = title_url[0]
   Array.from($('td[title="'+title+'"] + td .qs-editable-input-disabled')).forEach(function(s) {
-    console.log($(s))
+    //console.log($(s))
 
     if($(s).prop('tagName') != 'SELECT') {
       name = $(s).attr('name')
       den = $(s).attr('data-editor-name')
       dti = $(s).attr('data-test-id')
       dic = $(s).attr('data-input-control')
-      console.log(name)
-      console.log(den)
-      console.log(dti)
-      console.log(dic)
+      //console.log(name)
+      //console.log(den)
+      //console.log(dti)
+      //console.log(dic)
       
       id = 'x' + Math.floor(Math.random()*1000000000)
       $(s).replaceWith('<select id="' + id + '" autocomplete="off" class="qs-editable-input-disabled valid" name="'+name+'" data-test-id="'+dti+'" data-editor-name="'+den+'" data-input-control="'+dic+'" ></select>')
