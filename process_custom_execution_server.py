@@ -101,11 +101,10 @@ with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
 # }
 # ''')
 
-if __name__ == '__main__':
-    logger = Logger()
-    servername = o['name']
-    servertype = o['type']
-    server = CustomExecutionServer(server_name=servername,
+logger = Logger()
+servername = o['name']
+servertype = o['type']
+server = CustomExecutionServer(server_name=servername,
                                    server_description=o['description'],
                                    server_type=servertype,
                                    server_capacity=int(o['capacity']),
@@ -123,7 +122,16 @@ if __name__ == '__main__':
                                    auto_register=False,
                                    auto_start=False)
 
+def handler(signum, frame):
+    print ("Stopping, please wait up to 2 minutes...")
+    server.stop()
+    print ("Stopped")
 
+print '4: %d' % os.getpid()
+sg = 30
+signal.signal(sg, handler)
+
+if True:
     if len(sys.argv) > 1:
         if sys.argv[1] == 'register':
             server.register()
@@ -152,13 +160,16 @@ if __name__ == '__main__':
         except:
             pass
         if os.fork() == 0:
+            print '1: %d' % os.getpid()
             os.setsid()
             if os.fork() == 0:
                 os.chdir('/')
                 os.umask(0)
             else:
+                print '2: %d' % os.getpid()
                 os._exit(0)
         else:
+            print '3: %d' % os.getpid()
             os._exit(0)
 
         server.start()
