@@ -1,15 +1,15 @@
 import json
-import os
 import platform
 import signal
 import subprocess
 import sys
 import time
+import os
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
     FailedCommandResult
 
-import os
+from cloudshell.custom_execution_server.daemon import become_daemon_and_wait
 
 
 class ProcessRunner():
@@ -138,41 +138,15 @@ if __name__ == '__main__':
             print('update - update the details of the execution server to those in config.json')
             sys.exit(1)
     else:
-        def handler(signum, frame):
+        def daemon_start():
+            server.start()
+            print ('%s execution server %s started' % (servertype, servername))
+            print ('kill -s 30 %d to stop. Shutdown takes up to 2 minutes.' % os.getpid())
+
+        def daemon_stop():
             print ("Stopping, please wait up to 2 minutes...")
             server.stop()
             print ("Stopped")
-            os._exit(0)
 
-        sg = 30
-        signal.signal(sg, handler)
-        try:
-            signal.signal(signal.SIGHUP, signal.SIG_IGN)
-        except:
-            pass
-        if os.fork() == 0:
-            print '1: %d' % os.getpid()
-            os.setsid()
-            if os.fork() == 0:
-                os.chdir('/')
-                os.umask(0)
-            else:
-                print '2: %d' % os.getpid()
-                os._exit(0)
-        else:
-            print '3: %d' % os.getpid()
-            os._exit(0)
-
-        server.start()
-        print ('%s execution server %s started' % (servertype, servername))
-        print ('kill -s %d %d to stop. Shutdown takes up to 2 minutes.' % (sg, os.getpid()))
-
-        # only the main thread can receive signals
-        while True:
-            time.sleep(60)
-
-            # if sys.version_info.major == 2:
-        #     raw_input()
-        # else:
-        #     input()
+        become_daemon_and_wait(daemon_start, daemon_stop, exit_signal=30)
 
