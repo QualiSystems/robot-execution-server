@@ -1,7 +1,7 @@
-def test1_func(cloudshell_reservation_id, cloudshell_host, cloudshell_port, cloudshell_user, cloudshell_password, cloudshell_domain):
+def test1_func(cloudshell_reservation_id, cloudshell_server_address, cloudshell_port, cloudshell_username, cloudshell_password, cloudshell_domain):
     print('CloudShell reservation id: %s' % cloudshell_reservation_id)
-    print('CloudShell host: %s' % cloudshell_host)
+    print('CloudShell server address: %s' % cloudshell_server_address)
     print('CloudShell port: %d' % cloudshell_port)
-    print('CloudShell user: %s' % cloudshell_user)
-    print('CloudShell password: %s' % '(hidden)')
+    print('CloudShell admin username: %s' % cloudshell_username)
+    print('CloudShell admin password: %s' % '(hidden)')
     print('CloudShell domain: %s' % cloudshell_domain)

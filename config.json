@@ -1,10 +1,11 @@
 {
-  "cloudshell_host" : "192.168.2.108",
+  "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
-  "cloudshell_admin_username" : "admin",
-  "cloudshell_admin_password" : "<ASK_AT_STARTUP>",
+  "cloudshell_username" : "admin",
+  "cloudshell_password" : "<ASK_AT_STARTUP>",
   "cloudshell_domain" : "Global",
+
   "cloudshell_execution_server_name" : "MyCES1",
   "cloudshell_execution_server_description" : "Robot CES in Python",
   "cloudshell_execution_server_type" : "Python",

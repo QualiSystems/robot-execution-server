@@ -20,11 +20,11 @@ server_description = o['cloudshell_execution_server_description']
 server_capacity = int(o['cloudshell_execution_server_capacity'])
 server_name = o['cloudshell_execution_server_name']
 server_type = o['cloudshell_execution_server_type']
-cloudshell_host = o['cloudshell_host']
+cloudshell_server_address = o['cloudshell_server_address']
 cloudshell_snq_port = int(o['cloudshell_snq_port'])
 cloudshell_port = int(o['cloudshell_port'])
-cloudshell_username = o['cloudshell_admin_username']
-cloudshell_password = o['cloudshell_admin_password']
+cloudshell_username = o['cloudshell_username']
+cloudshell_password = o['cloudshell_password']
 cloudshell_domain = o['cloudshell_domain']
 git_repo_url = o['git_repo_url']
 
@@ -129,7 +129,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
         t = 'robot'
         t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
-        t += ' --variable CLOUDSHELL_HOST:%s' % cloudshell_host
+        t += ' --variable CLOUDSHELL_SERVER_ADDRESS:%s' % cloudshell_server_address
         t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
         t += ' --variable CLOUDSHELL_USERNAME:%s' % cloudshell_username
         t += ' --variable CLOUDSHELL_PASSWORD:%s' % cloudshell_password
@@ -193,7 +193,7 @@ server = CustomExecutionServer(server_name=server_name,
 
                                logger=logger,
 
-                               cloudshell_host=cloudshell_host,
+                               cloudshell_host=cloudshell_server_address,
                                cloudshell_port=cloudshell_snq_port,
                                cloudshell_username=cloudshell_username,
                                cloudshell_password=cloudshell_password,
