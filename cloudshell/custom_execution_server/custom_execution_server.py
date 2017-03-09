@@ -38,6 +38,7 @@ class CommandResult:
             pass
         return '%s result=%s error_name=%s error_description=%s report_filename=%s report_data=<<<%s>>> report_mime_type=%s' % (self.__class__.__name__, self.result, self.error_name, self.error_description, self.report_filename, d, self.report_mime_type)
 
+
 class StoppedCommandResult(CommandResult):
     """
     Result returned by the system when a stop request was received from CloudShellr
@@ -331,7 +332,7 @@ class CustomExecutionServer:
         if not result:
             result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute() should return a CommandResult object or throw an exception')
 
-        self._logger.info('Result for execution %s: %s: %s' % (execution_id, result.__class__.__name__, result))
+        self._logger.info('Result for execution %s: %s' % (execution_id, result))
         try:
             self._request('put', '/API/Execution/FinishedExecution',
                           data=json.dumps({

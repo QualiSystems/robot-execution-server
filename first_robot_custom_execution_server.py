@@ -127,7 +127,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
         self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2')
 
-        t = 'robot %s' % test_path
+        t = 'robot'
         t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
         t += ' --variable CLOUDSHELL_HOST:%s' % cloudshell_host
         t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
@@ -136,7 +136,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
         if test_arguments and test_arguments != 'None':
             t += ' ' + test_arguments
-
+        t += ' %s' % test_path
         output, robotretcode = self._process_runner.execute(t, execution_id)
 
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
