@@ -112,7 +112,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         #     "IsBuildType":false
         # }
 
-        git_branch_or_tag_spec = [[v['Value'] for v in rjo['TopologyInputs'] if v['Name'] == 'TestVersion'] + ['Error-TestVersion-Missing']][0]
+        git_branch_or_tag_spec = ([v['Value'] for v in rjo['TopologyInputs'] if v['Name'] == 'TestVersion'] + ['Error-TestVersion-Missing'])[0]
         # MYBRANCHNAME or tags/MYTAGNAME
 
         self._process_runner.execute_throwing('git clone %s repo' % git_repo_url, execution_id+'_git1')
@@ -188,7 +188,7 @@ server = CustomExecutionServer(server_name=server_name,
                                logger=logger,
 
                                cloudshell_host=cloudshell_host,
-                               cloudshell_port=cloudshell_port,
+                               cloudshell_port=cloudshell_snq_port,
                                cloudshell_username=cloudshell_username,
                                cloudshell_password=cloudshell_password,
                                cloudshell_domain=cloudshell_domain,

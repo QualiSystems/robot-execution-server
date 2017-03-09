@@ -323,7 +323,7 @@ class CustomExecutionServer:
         if not result:
             result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute() should return a CommandResult object or throw an exception')
 
-        self._logger.info('Result for execution %s: %s: %s' % (execution_id, result.__class__.name, result))
+        self._logger.info('Result for execution %s: %s: %s' % (execution_id, result.__class__.__name__, result))
         try:
             self._request('put', '/API/Execution/FinishedExecution',
                           data=json.dumps({

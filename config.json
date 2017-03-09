@@ -10,6 +10,6 @@
   "cloudshell_execution_server_type" : "Python",
   "cloudshell_execution_server_capacity" : "5",
 
-  "git_repo_url": "https://ericrqs:<ASK_AT_STARTUP>@github.com/ericrqs/robot-execution-server"
+  "git_repo_url": "https://github.com/ericrqs/robot-execution-server"
 
 }
