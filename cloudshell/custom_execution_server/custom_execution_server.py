@@ -18,50 +18,74 @@ else:
 
 
 class CommandResult:
+    """
+    Base class for command results
+    """
     def __init__(self):
         self.result = ''
         self.error_name = ''
         self.error_description = ''
         self.report_filename = ''
         self.report_data = ''
+        self.report_mime_type = ''
 
 
 class StoppedCommandResult(CommandResult):
+    """
+    Result returned by the system when a stop request was received from CloudShellr
+    """
     def __init__(self):
         CommandResult.__init__(self)
         self.result = 'Stopped'
 
 
 class CompletedCommandResult(CommandResult):
-    def __init__(self, report_filename, report_data):
+    """
+    Result that makes no comment on success or failure -- includes output file
+    """
+    def __init__(self, report_filename, report_data, report_mime_type='text/plain'):
         CommandResult.__init__(self)
         self.result = 'Completed'
         self.report_filename = report_filename
         self.report_data = report_data
+        self.report_mime_type = report_mime_type
 
 
 class PassedCommandResult(CommandResult):
-    def __init__(self, report_filename, report_data):
+    """
+    Result of a test considered to have passed -- includes output file
+    """
+    def __init__(self, report_filename, report_data, report_mime_type='text/plain'):
         CommandResult.__init__(self)
         self.result = 'Passed'
         self.report_filename = report_filename
         self.report_data = report_data
+        self.report_mime_type = report_mime_type
+
+
+class FailedCommandResult(CommandResult):
+    """
+    Result of a test considered to have failed -- still includes output file
+    """
+    def __init__(self, report_filename, report_data, report_mime_type='text/plain'):
+        CommandResult.__init__(self)
+        self.result = 'Failed'
+        self.report_filename = report_filename
+        self.report_data = report_data
+        self.report_mime_type = report_mime_type
 
 
 class ErrorCommandResult(CommandResult):
+    """
+    Result to return when an error occurred -- includes error message and description but not an output file
+    Also sent automatically by the system if the execute() implementation threw an exception
+    """
     def __init__(self, error_name, error_description):
         CommandResult.__init__(self)
         self.result = 'Error'
         self.error_name = error_name
         self.error_description = error_description
 
-
-class FailedCommandResult(CommandResult):
-    def __init__(self, error_name, error_description):
-        CommandResult.__init__(self)
-        self.result = 'Failed'
-        self.error_name = error_name
-        self.error_description = error_description
 
 
 class CustomExecutionServerCommandHandler:
@@ -289,10 +313,17 @@ class CustomExecutionServer:
     def _command_worker_thread(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json):
         self._execution_ids.add(execution_id)
         try:
+            self._logger.info(
+                'Executing test_path=%s test_arguments=%s execution_id=%s username=%s reservation_id=%s reservation_json=%s' % (
+                    test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
             result = self._command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
         except:
             result = ErrorCommandResult('Unhandled Python exception', traceback.format_exc())
 
+        if not result:
+            result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute() should return a CommandResult object or throw an exception')
+
+        self._logger.info('Result for execution %s: %s: %s' % (execution_id, result.__class__.name, result))
         try:
             self._request('put', '/API/Execution/FinishedExecution',
                           data=json.dumps({
@@ -303,14 +334,23 @@ class CustomExecutionServer:
                               'ErrorName': result.error_name,
                           }))
             if result.report_filename:
+                if sys.version_info.major == 3:
+                    data = result.report_data
+                    if isinstance(data, str):
+                        data = data.encode('utf-8', 'replace')
+                else:
+                    data = result.report_data
+                    if isinstance(data, unicode):
+                        data = data.encode('utf-8', 'replace')
+
                 self._request('post', '/API/Execution/ExecutionReport/%s/%s/%s' % (quote(self._server_name),
                                                                                    execution_id,
                                                                                    quote(result.report_filename)),
                               headers={
                                   'Accept': 'application/json',
-                                  'Content-Type': 'application/octet-stream',
+                                  'Content-Type': result.report_mime_type,
                               },
-                              data=result.report_data)
+                              data=data)
         finally:
             self._execution_ids.remove(execution_id)
 
