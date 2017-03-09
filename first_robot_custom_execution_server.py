@@ -222,8 +222,8 @@ if __name__ == '__main__':
             server.start()
             print ('%s execution server %s started' % (server_type, server_name))
             print ('To stop:')
-            print ('kill -s 30 %d')
-            print ('Shutdown takes up to 2 minutes.' % os.getpid())
+            print ('kill -s 30 %d' % os.getpid())
+            print ('Shutdown takes up to 2 minutes.')
 
         def daemon_stop():
             print ("Stopping, please wait up to 2 minutes...")
