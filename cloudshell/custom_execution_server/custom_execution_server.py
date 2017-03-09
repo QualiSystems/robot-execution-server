@@ -381,7 +381,14 @@ class CustomExecutionServer:
 
         url = 'http://%s:%d/%s' % (self._cloudshell_host, self._cloudshell_port, path)
 
-        self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, headers, data))
+        if sys.version_info.major == 3:
+            if isinstance(data, bytes):
+                pdata = '(%d bytes binary data)' % len(data)
+            else:
+                pdata = data
+        else:
+            pdata = data
+        self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, headers, pdata))
 
         if sys.version_info.major == 3:
             if data:
