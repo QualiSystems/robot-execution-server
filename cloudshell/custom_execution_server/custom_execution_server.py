@@ -385,7 +385,8 @@ class CustomExecutionServer:
 
         if sys.version_info.major == 3:
             if data:
-                data = data.encode('utf-8', 'replace')
+                if isinstance(data, str):
+                    data = data.encode('utf-8', 'replace')
             else:
                 data = b''
         request = Request(url, data, headers)
