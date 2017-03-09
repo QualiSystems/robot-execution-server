@@ -29,10 +29,16 @@ cloudshell_domain = o['cloudshell_domain']
 git_repo_url = o['git_repo_url']
 
 if cloudshell_password == '<ASK_AT_STARTUP>':
-    cloudshell_password = input('Enter password for CloudShell user %s: ' % cloudshell_username)
+    if sys.version_info.major == 3:
+        cloudshell_password = input('Enter password for CloudShell user %s: ' % cloudshell_username)
+    else:
+        cloudshell_password = raw_input('Enter password for CloudShell user %s: ' % cloudshell_username)
 
 if '<ASK_AT_STARTUP>' in git_repo_url:
-    s = input('Enter password for URL %s: ' % git_repo_url)
+    if sys.version_info.major == 3:
+        s = input('Enter password for URL %s: ' % git_repo_url)
+    else:
+        s = raw_input('Enter password for URL %s: ' % git_repo_url)
     git_repo_url = git_repo_url.replace('<ASK_AT_STARTUP>', s)
 
 
