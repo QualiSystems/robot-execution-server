@@ -162,26 +162,6 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         os.chdir(tempdir)
 
         rjo = json.loads(reservation_json)
-        # {
-        #     "Id":"651f1b1c-fa7c-4199-8d96-3fff612eaefe",
-        #     "Name":"j1",
-        #     "Owner":{"UserName":"admin","Email":null,"DisplayName":"admin","Groups":["System Administrators","Everyone"]},
-        #     "PermittedUsers":[{"UserName":"admin","Email":null,"DisplayName":"admin","Groups":["System Administrators","Everyone"]}],
-        #     "StartTime":"2017-03-07T23:12:00",
-        #     "EndTime":"2017-03-07T23:33:00",
-        #     "Domain":"Global",
-        #     "Topology":"Root\\ROBOT ENV",
-        #     "TopologyInputs":[
-        #     {"Name":"TestVersion","Type":0,"AbstractId":"00000000-0000-0000-0000-000000000000","AbstractAlias":"","GlobalName":null,"Value":"BunnyDiana/editmehtml-edited-online-with-bitbucket-1413226554474","Description":null,"ValueType":1,"PossibleValues":[],"MaxQuantity":0}
-        #     ],
-        #     "Resources":[],
-        #     "Services":[],
-        #     "Apps":null,
-        #     "Routes":[],
-        #     "Connectors":[],
-        #     "ReservationStatus":1,
-        #     "IsBuildType":false
-        # }
 
         git_branch_or_tag_spec = None
         for v in rjo['TopologyInputs']:
@@ -231,41 +211,14 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         os.chdir('/')
         shutil.rmtree(tempdir)
         if robotretcode == 0:
-            return PassedCommandResult(zipname, zipdata)
+            return PassedCommandResult(zipname, zipdata, 'application/zip')
         else:
-            return FailedCommandResult(zipname, zipdata)
+            return FailedCommandResult(zipname, zipdata, 'application/zip')
 
     def stop(self, execution_id, logger):
         logger.info('stop %s\n' % execution_id)
         self._process_runner.stop(execution_id)
 
-
-# class Logger:
-#     def warn(self, s):
-#         print(s + '\n')
-#     def debug(self, s):
-#         print(s + '\n')
-#         pass
-#     def info(self, s):
-#         print(s + '\n')
-#     def error(self, s):
-#         print(s + '\n')
-
-
-
-# o = json.loads('''{
-# "host" : "http://localhost:9000",
-# "username" : "admin",
-# "password" : "admin",
-# "domain" : "Global",
-# "name" : "MyCES1",
-# "description" : "Reference implementation CES in Python",
-# "type" : "Python",
-# "capacity" : "5"
-# }
-# ''')
-
-# logger = Logger()
 logger = logging.getLogger(server_name)
 handler = logging.FileHandler('%s/%s' % (log_directory, log_filename))
 handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
