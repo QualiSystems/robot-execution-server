@@ -7,6 +7,8 @@ import traceback
 
 import itertools
 
+import re
+
 if sys.version_info.major == 2:
     from urllib2 import Request
     from urllib2 import urlopen
@@ -388,7 +390,14 @@ class CustomExecutionServer:
                 pdata = data
         else:
             pdata = data
-        self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, headers, pdata))
+
+        pdata = re.sub(r':[^@]*@', ':(password hidden)@', pdata)
+        pdata = re.sub(r'"Password":\s*"[^"]*"', '"Password": "(password hidden)"', pdata)
+        pheaders = dict(headers)
+        if 'Authorization' in pheaders:
+            pheaders['Authorization'] = '(token hidden)'
+
+        self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, pheaders, pdata))
 
         if sys.version_info.major == 3:
             if data:
@@ -396,6 +405,7 @@ class CustomExecutionServer:
                     data = data.encode('utf-8', 'replace')
             else:
                 data = b''
+
         request = Request(url, data, headers)
         request.get_method = lambda: method.upper()
         response = urlopen(request)
@@ -407,7 +417,6 @@ class CustomExecutionServer:
                 body = ''
         code = response.getcode()
         response.close()
-
 
         self._logger.debug('Result %d: %d: %s' % (counter, code, body))
         if code >= 400:

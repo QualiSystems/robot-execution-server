@@ -6,6 +6,7 @@ import sys
 import time
 import os
 import tempfile
+import logging
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
     FailedCommandResult
@@ -13,38 +14,88 @@ from cloudshell.custom_execution_server.custom_execution_server import CustomExe
 from cloudshell.custom_execution_server.daemon import become_daemon_and_wait
 
 
-with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
-    o = json.load(f)
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
+        o = json.load(f)
+except:
+    print('''Failed to load config.json from the same directory as the execution server.
 
-server_description = o['cloudshell_execution_server_description']
-server_capacity = int(o['cloudshell_execution_server_capacity'])
-server_name = o['cloudshell_execution_server_name']
-server_type = o['cloudshell_execution_server_type']
-cloudshell_server_address = o['cloudshell_server_address']
-cloudshell_snq_port = int(o['cloudshell_snq_port'])
-cloudshell_port = int(o['cloudshell_port'])
-cloudshell_username = o['cloudshell_username']
-cloudshell_password = o['cloudshell_password']
-cloudshell_domain = o['cloudshell_domain']
-git_repo_url = o['git_repo_url']
+Example config.json:
+{
+  "cloudshell_server_address" : "192.168.2.108",
+  "cloudshell_port": 8029,                                           // optional
+  "cloudshell_snq_port": 9000,                                       // optional
+  "cloudshell_username" : "admin",                                   // optional, default 'admin'
 
-if cloudshell_password == '<ASK_AT_STARTUP>':
+  "cloudshell_password" : "myadminpassword",
+  // or
+  "cloudshell_password" : "<ASK_AT_STARTUP>",                        // prompt for password at startup
+
+  "cloudshell_domain" : "Global",                                    // optional, default 'Global'
+
+  "cloudshell_execution_server_name" : "MyCES1",
+  "cloudshell_execution_server_description" : "Robot CES in Python", // optional
+  "cloudshell_execution_server_type" : "Robot",
+  "cloudshell_execution_server_capacity" : "5",      // optional, default 5
+
+  "log_directory": "/var/log",                       // . or full path - optional, default /var/log
+  "log_level": "DEBUG",                              // CRITICAL|ERROR|WARNING|INFO|DEBUG - optional, default WARNING
+
+  "git_repo_url": "https://myuser:<ASK_AT_STARTUP>@github.com/myuser/myproj"  // prompt for password at startup
+  // or
+  "git_repo_url": "https://myuser@github.com/myuser/myproj"                   // prompt for passsword at startup
+  // or
+  "git_repo_url": "https://github.com/myuser/myproj"                          // clone without credentials
+
+}
+
+    ''')
+    sys.exit(1)
+server_description = o.get('cloudshell_execution_server_description', '')
+server_capacity = int(o.get('cloudshell_execution_server_capacity', 5))
+server_name = o.get('cloudshell_execution_server_name')
+server_type = o.get('cloudshell_execution_server_type')
+cloudshell_server_address = o.get('cloudshell_server_address')
+cloudshell_snq_port = int(o.get('cloudshell_snq_port', 9000))
+cloudshell_port = int(o.get('cloudshell_port', 8029))
+cloudshell_username = o.get('cloudshell_username', 'admin')
+cloudshell_password = o.get('cloudshell_password')
+cloudshell_domain = o.get('cloudshell_domain', 'Global')
+git_repo_url = o.get('git_repo_url')
+log_directory = o.get('log_directory', '/var/log')
+log_level = o.get('log_level', 'WARNING')
+
+errors = []
+if not cloudshell_server_address:
+    errors.append('cloudshell_server_address must be specified')
+if not server_name:
+    errors.append('server_name must be specified')
+if not server_type:
+    errors.append('server_type must be specified. The type must be registered in CloudShell portal under JOB SCHEDULING>Execution Server Types.')
+if errors:
+    raise Exception('Fix the following in config.json:\n' + '\n'.join(errors))
+
+if not cloudshell_password or cloudshell_password == '<ASK_AT_STARTUP>':
     if sys.version_info.major == 3:
         cloudshell_password = input('Enter password for CloudShell user %s: ' % cloudshell_username)
     else:
         cloudshell_password = raw_input('Enter password for CloudShell user %s: ' % cloudshell_username)
 
-if '<ASK_AT_STARTUP>' in git_repo_url:
+if '<ASK_AT_STARTUP>' in git_repo_url or ('@' in git_repo_url and ':' not in git_repo_url):
     if sys.version_info.major == 3:
-        s = input('Enter password for URL %s: ' % git_repo_url)
+        s = input('Enter password for repo URL %s: ' % git_repo_url)
     else:
-        s = raw_input('Enter password for URL %s: ' % git_repo_url)
+        s = raw_input('Enter password for repo URL %s: ' % git_repo_url)
     s = s.replace('@', '%40')
-    git_repo_url = git_repo_url.replace('<ASK_AT_STARTUP>', s)
+    if '<ASK_AT_STARTUP>' in git_repo_url:
+        git_repo_url = git_repo_url.replace('<ASK_AT_STARTUP>', s)
+    else:
+        git_repo_url = git_repo_url.replace('@', ':%s@' % s)
 
 
 class ProcessRunner():
-    def __init__(self):
+    def __init__(self, logger):
+        self._logger = logger
         self._current_processes = {}
         self._stopping_processes = []
         self._running_on_windows = platform.system() == 'Windows'
@@ -52,9 +103,12 @@ class ProcessRunner():
     def execute_throwing(self, command, identifier):
         o, c = self.execute(command, identifier)
         if c:
-            raise Exception('Error: %d: %s failed: %s' % (c, command, o))
+            s = 'Error: %d: %s failed: %s' % (c, command, o)
+            self._logger.error(s)
+            raise Exception(s)
 
     def execute(self, command, identifier):
+        self._logger.info('Execution %s: Running %s' % (identifier, command))
         if self._running_on_windows:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         else:
@@ -63,11 +117,12 @@ class ProcessRunner():
         output = ''
         if sys.version_info.major == 3:
             for line in iter(process.stdout.readline, b''):
-                print('Output line: %s' % line)
+                self._logger.info('Output line: %s' % line)
                 line = line.decode('utf-8', 'replace')
                 output += line
         else:
             for line in iter(process.stdout.readline, b''):
+                self._logger.info('Output line: %s' % line)
                 output += line
         process.communicate()
         self._current_processes.pop(identifier, None)
@@ -77,6 +132,7 @@ class ProcessRunner():
         return output, process.returncode
 
     def stop(self, identifier):
+        self._logger.info('Received stop command for %s' % identifier)
         process = self._current_processes.get(identifier)
         if process is not None:
             self._stopping_processes.append(identifier)
@@ -88,9 +144,10 @@ class ProcessRunner():
 
 class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler):
 
-    def __init__(self):
+    def __init__(self, logger):
         CustomExecutionServerCommandHandler.__init__(self)
-        self._process_runner = ProcessRunner()
+        self._logger = logger
+        self._process_runner = ProcessRunner(self._logger)
 
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         # logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
@@ -119,14 +176,22 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         #     "IsBuildType":false
         # }
 
-        git_branch_or_tag_spec = ([v['Value'] for v in rjo['TopologyInputs'] if v['Name'] == 'TestVersion'] + ['Error-TestVersion-Missing'])[0]
+        git_branch_or_tag_spec = None
+        for v in rjo['TopologyInputs']:
+            if v['Name'] == 'TestVersion':
+                git_branch_or_tag_spec = v['Value']
+        if git_branch_or_tag_spec == 'None':
+            git_branch_or_tag_spec = None
         # MYBRANCHNAME or tags/MYTAGNAME
 
         self._process_runner.execute_throwing('git clone %s repo' % git_repo_url, execution_id+'_git1')
 
         os.chdir(wd + '/repo')
 
-        self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2')
+        if git_branch_or_tag_spec:
+            self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2')
+        else:
+            self._logger.info('TestVersion not specified - taking latest from default branch')
 
         t = 'robot'
         t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
@@ -141,7 +206,6 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         output, robotretcode = self._process_runner.execute(t, execution_id)
 
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
-        # print('execute result: %d: %s\n' % (retcode, output))
 
         zipname = '%s_%s.zip' % (test_path, now)
         self._process_runner.execute_throwing('zip %s output.xml log.html report.html' % zipname, execution_id+'_zip')
@@ -159,16 +223,16 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         self._process_runner.stop(execution_id)
 
 
-class Logger:
-    def warn(self, s):
-        print(s + '\n')
-    def debug(self, s):
-        print(s + '\n')
-        pass
-    def info(self, s):
-        print(s + '\n')
-    def error(self, s):
-        print(s + '\n')
+# class Logger:
+#     def warn(self, s):
+#         print(s + '\n')
+#     def debug(self, s):
+#         print(s + '\n')
+#         pass
+#     def info(self, s):
+#         print(s + '\n')
+#     def error(self, s):
+#         print(s + '\n')
 
 
 
@@ -184,13 +248,20 @@ class Logger:
 # }
 # ''')
 
-logger = Logger()
+# logger = Logger()
+logger = logging.getLogger(server_name)
+handler = logging.FileHandler('%s/%s.log' % (log_directory, server_name))
+handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+logger.addHandler(handler)
+if log_level:
+    logger.setLevel(logging.getLevelName(log_level.upper()))
+
 server = CustomExecutionServer(server_name=server_name,
                                server_description=server_description,
                                server_type=server_type,
                                server_capacity=server_capacity,
 
-                               command_handler=MyCustomExecutionServerCommandHandler(),
+                               command_handler=MyCustomExecutionServerCommandHandler(logger),
 
                                logger=logger,
 
