@@ -391,6 +391,10 @@ class CustomExecutionServer:
                 pdata = data or ''
         else:
             pdata = data or ''
+            try:
+                pdata = pdata.encode('ascii')
+            except:
+                pdata = '(%d bytes binary data)' % len(data)
 
         pdata = re.sub(r':[^@]*@', ':(password hidden)@', pdata)
         pdata = re.sub(r'"Password":\s*"[^"]*"', '"Password": "(password hidden)"', pdata)
@@ -398,8 +402,6 @@ class CustomExecutionServer:
         if 'Authorization' in pheaders:
             pheaders['Authorization'] = '(token hidden)'
 
-        print(data)
-        print(pdata)
         self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, pheaders, pdata))
 
         if sys.version_info.major == 3:
@@ -418,13 +420,19 @@ class CustomExecutionServer:
                 body = body.decode('utf-8')
             else:
                 body = ''
+            pbody = body
+        else:
+            try:
+                pbody = body.decode('utf-8')
+            except:
+                pbody = '(%d bytes binary data)' % len(body)
         code = response.getcode()
         response.close()
 
         if hide_result:
             self._logger.debug('Result %d: %d: (hidden)' % (counter, code))
         else:
-            self._logger.debug('Result %d: %d: %s' % (counter, code, body))
+            self._logger.debug('Result %d: %d: %s' % (counter, code, pbody))
 
 
         if code >= 400:
