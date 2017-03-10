@@ -115,7 +115,7 @@ class ProcessRunner():
         if 'CLOUDSHELL_PASSWORD' in penv:
             penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
 
-        self._logger.info('Execution %s: Running %s with env %s' % (identifier, pcommand, env))
+        self._logger.info('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
         if self._running_on_windows:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env)
         else:
