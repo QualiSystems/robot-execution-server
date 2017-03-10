@@ -8,7 +8,7 @@ import time
 import os
 import tempfile
 import logging
-
+import shutil
 import re
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
@@ -158,8 +158,8 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         # logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
-        wd = tempfile.mkdtemp()
-        os.chdir(wd)
+        tempdir = tempfile.mkdtemp()
+        os.chdir(tempdir)
 
         rjo = json.loads(reservation_json)
         # {
@@ -193,7 +193,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
         self._process_runner.execute_throwing('git clone %s repo' % git_repo_url, execution_id+'_git1')
 
-        os.chdir(wd + '/repo')
+        os.chdir(tempdir + '/repo')
 
         if git_branch_or_tag_spec:
             self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2')
@@ -228,6 +228,8 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         with open(zipname, 'rb') as f:
             zipdata = f.read()
 
+        os.chdir('/')
+        shutil.rmtree(tempdir)
         if robotretcode == 0:
             return PassedCommandResult(zipname, zipdata)
         else:
