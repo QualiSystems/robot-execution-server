@@ -392,7 +392,7 @@ class CustomExecutionServer:
         else:
             pdata = data or ''
             try:
-                pdata = pdata.encode('ascii')
+                pdata = pdata.decode('ascii')
             except:
                 pdata = '(%d bytes binary data)' % len(data)
 
