@@ -7,8 +7,8 @@ def become_daemon_and_wait(on_start, on_exit, exit_signal=30):
     """
     Detaches from the terminal and sleeps in the main thread until the exit signal is received
 
-    :param on_start: function with no arguments that starts the service
-    :param on_exit: function with no arguments that implements service shutdown (does not need to exit the process)
+    :param on_start: function with no arguments that starts the service threads
+    :param on_exit: function with no arguments that stops the service threads (does not need to exit the process)
     :param exit_signal: signal that will trigger shutdown, by default SIGUSR1
     :return:
     """
