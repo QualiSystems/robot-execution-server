@@ -104,23 +104,27 @@ class ProcessRunner():
         self._stopping_processes = []
         self._running_on_windows = platform.system() == 'Windows'
 
-    def execute_throwing(self, command, identifier):
-        o, c = self.execute(command, identifier)
+    def execute_throwing(self, command, identifier, env=None):
+        o, c = self.execute(command, identifier, env=env)
         if c:
             s = 'Error: %d: %s failed: %s' % (c, command, o)
             self._logger.error(s)
             raise Exception(s)
 
-    def execute(self, command, identifier):
+    def execute(self, command, identifier, env=None):
+        env = env or {}
         pcommand = command
         pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
         pcommand = re.sub(r"CLOUDSHELL_PASSWORD:[^']*", 'CLOUDSHELL_PASSWORD:(password hidden)', pcommand)
+        penv = dict(env)
+        if 'CLOUDSHELL_PASSWORD' in penv:
+            penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
 
-        self._logger.info('Execution %s: Running %s' % (identifier, pcommand))
+        self._logger.info('Execution %s: Running %s with env %s' % (identifier, pcommand, env))
         if self._running_on_windows:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env)
         else:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid)
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid, env=env)
         self._current_processes[identifier] = process
         output = ''
         if sys.version_info.major == 3:
@@ -202,16 +206,23 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             self._logger.info('TestVersion not specified - taking latest from default branch')
 
         t = 'robot'
-        t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
-        t += ' --variable CLOUDSHELL_SERVER_ADDRESS:%s' % cloudshell_server_address
-        t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
-        t += ' --variable CLOUDSHELL_USERNAME:%s' % cloudshell_username
-        t += " --variable 'CLOUDSHELL_PASSWORD:%s'" % cloudshell_password
-        t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
+        # t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
+        # t += ' --variable CLOUDSHELL_SERVER_ADDRESS:%s' % cloudshell_server_address
+        # t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
+        # t += ' --variable CLOUDSHELL_USERNAME:%s' % cloudshell_username
+        # t += " --variable 'CLOUDSHELL_PASSWORD:%s'" % cloudshell_password
+        # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
         if test_arguments and test_arguments != 'None':
             t += ' ' + test_arguments
         t += ' %s' % test_path
-        output, robotretcode = self._process_runner.execute(t, execution_id)
+        output, robotretcode = self._process_runner.execute(t, execution_id, env={
+            'CLOUDSHELL_RESERVATION_ID': reservation_id,
+            'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address,
+            'CLOUDSHELL_PORT': str(cloudshell_port),
+            'CLOUDSHELL_USERNAME': cloudshell_username,
+            'CLOUDSHELL_PASSWORD': cloudshell_password,
+            'CLOUDSHELL_DOMAIN': cloudshell_domain,
+        })
 
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
 
