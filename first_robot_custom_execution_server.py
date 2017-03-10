@@ -84,7 +84,7 @@ if not cloudshell_password or cloudshell_password == '<ASK_AT_STARTUP>':
     cloudshell_password = getpass.getpass('Enter password for CloudShell user %s: ' % cloudshell_username)
 
 if '<ASK_AT_STARTUP>' in git_repo_url or ('@' in git_repo_url and ':' not in git_repo_url.replace('://', '')):
-    s = getpass.getpass('Enter password for repo URL %s: ')
+    s = getpass.getpass('Enter password for repo URL %s: ' % git_repo_url)
     s = s.replace('@', '%40')
     if '<ASK_AT_STARTUP>' in git_repo_url:
         git_repo_url = git_repo_url.replace('<ASK_AT_STARTUP>', s)
