@@ -39,6 +39,7 @@ if '<ASK_AT_STARTUP>' in git_repo_url:
         s = input('Enter password for URL %s: ' % git_repo_url)
     else:
         s = raw_input('Enter password for URL %s: ' % git_repo_url)
+    s = s.replace('@', '%40')
     git_repo_url = git_repo_url.replace('<ASK_AT_STARTUP>', s)
 
 
