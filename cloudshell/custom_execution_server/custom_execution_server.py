@@ -420,7 +420,7 @@ class CustomExecutionServer:
         response.close()
 
         if hide_result:
-            self._logger.debug('Result %d: %d: (hidden)' % (counter, code, body))
+            self._logger.debug('Result %d: %d: (hidden)' % (counter, code))
         else:
             self._logger.debug('Result %d: %d: %s' % (counter, code, body))
 
