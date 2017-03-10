@@ -387,9 +387,9 @@ class CustomExecutionServer:
             if isinstance(data, bytes):
                 pdata = '(%d bytes binary data)' % len(data)
             else:
-                pdata = data
+                pdata = data or ''
         else:
-            pdata = data
+            pdata = data or ''
 
         pdata = re.sub(r':[^@]*@', ':(password hidden)@', pdata)
         pdata = re.sub(r'"Password":\s*"[^"]*"', '"Password": "(password hidden)"', pdata)
