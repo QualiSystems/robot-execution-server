@@ -41,7 +41,8 @@ Example config.json:
   "cloudshell_execution_server_capacity" : "5",      // optional, default 5
 
   "log_directory": "/var/log",                       // . or full path - optional, default /var/log
-  "log_level": "INFO",                              // CRITICAL|ERROR|WARNING|INFO|DEBUG - optional, default INFO
+  "log_level": "INFO",                               // CRITICAL|ERROR|WARNING|INFO|DEBUG - optional, default INFO
+  "log_filename": "MyCES1.log",                      // optional, default <cloudshell_execution_server_name>.log
 
   "git_repo_url": "https://myuser:<ASK_AT_STARTUP>@github.com/myuser/myproj"  // prompt for password at startup
   // or
@@ -66,6 +67,7 @@ cloudshell_domain = o.get('cloudshell_domain', 'Global')
 git_repo_url = o.get('git_repo_url')
 log_directory = o.get('log_directory', '/var/log')
 log_level = o.get('log_level', 'WARNING')
+log_filename = o.get('log_filename', server_name + '.log')
 
 errors = []
 if not cloudshell_server_address:
@@ -256,7 +258,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
 # logger = Logger()
 logger = logging.getLogger(server_name)
-handler = logging.FileHandler('%s/%s.log' % (log_directory, server_name))
+handler = logging.FileHandler('%s/%s' % (log_directory, log_filename))
 handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
 logger.addHandler(handler)
 if log_level:
