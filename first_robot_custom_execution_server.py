@@ -112,6 +112,7 @@ class ProcessRunner():
     def execute(self, command, identifier):
         pcommand = command
         pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
+        pcommand = re.sub(r"CLOUDSHELL_PASSWORD:[^']*", 'CLOUDSHELL_PASSWORD:(password hidden)', pcommand)
 
         self._logger.info('Execution %s: Running %s' % (identifier, pcommand))
         if self._running_on_windows:
@@ -203,7 +204,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         t += ' --variable CLOUDSHELL_SERVER_ADDRESS:%s' % cloudshell_server_address
         t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
         t += ' --variable CLOUDSHELL_USERNAME:%s' % cloudshell_username
-        t += ' --variable CLOUDSHELL_PASSWORD:%s' % cloudshell_password
+        t += " --variable 'CLOUDSHELL_PASSWORD:%s'" % cloudshell_password
         t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
         if test_arguments and test_arguments != 'None':
             t += ' ' + test_arguments
