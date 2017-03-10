@@ -41,7 +41,7 @@ Example config.json:
   "cloudshell_execution_server_capacity" : "5",      // optional, default 5
 
   "log_directory": "/var/log",                       // . or full path - optional, default /var/log
-  "log_level": "DEBUG",                              // CRITICAL|ERROR|WARNING|INFO|DEBUG - optional, default WARNING
+  "log_level": "INFO",                              // CRITICAL|ERROR|WARNING|INFO|DEBUG - optional, default INFO
 
   "git_repo_url": "https://myuser:<ASK_AT_STARTUP>@github.com/myuser/myproj"  // prompt for password at startup
   // or
@@ -111,7 +111,7 @@ class ProcessRunner():
 
     def execute(self, command, identifier):
         pcommand = command
-        pcommand = re.sub(r':[^@]*@', ':(password hidden)@', pcommand)
+        pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
 
         self._logger.info('Execution %s: Running %s' % (identifier, pcommand))
         if self._running_on_windows:
@@ -297,14 +297,15 @@ if __name__ == '__main__':
     else:
         def daemon_start():
             server.start()
-            print ('%s execution server %s started' % (server_type, server_name))
-            print ('To stop:')
-            print ('kill -s 30 %d' % os.getpid())
-            print ('Shutdown takes up to 2 minutes.')
+            s = '%s execution server %s started\nTo stop:\nkill -s SIGUSR1 %d' % (server_type, server_name, os.getpid())
+            logger.info(s)
+            print (s)
 
         def daemon_stop():
+            logger.info("Stopping, please wait up to 2 minutes...")
             print ("Stopping, please wait up to 2 minutes...")
             server.stop()
+            logger.info("Stopped")
             print ("Stopped")
 
         become_daemon_and_wait(daemon_start, daemon_stop, exit_signal=30)

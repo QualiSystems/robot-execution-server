@@ -195,11 +195,12 @@ class CustomExecutionServer:
 
         self._token = None
         _, body = self._request('put', '/API/Auth/login',
-                                    data=json.dumps({
-                                        'Username': cloudshell_username,
-                                        'Password': cloudshell_password,
-                                        'Domain': cloudshell_domain,
-                                    }))
+                                data=json.dumps({
+                                    'Username': cloudshell_username,
+                                    'Password': cloudshell_password,
+                                    'Domain': cloudshell_domain,
+                                }),
+                                hide_result=True)
         self._token = body.replace('"', '')
 
         if auto_register:
@@ -365,7 +366,7 @@ class CustomExecutionServer:
         finally:
             self._execution_ids.remove(execution_id)
 
-    def _request(self, method, path, data=None, headers=None, **kwargs):
+    def _request(self, method, path, data=None, headers=None, hide_result=False, **kwargs):
         if sys.version_info.major == 3:
             counter = self._counter.__next__()
         else:
@@ -418,7 +419,12 @@ class CustomExecutionServer:
         code = response.getcode()
         response.close()
 
-        self._logger.debug('Result %d: %d: %s' % (counter, code, body))
+        if hide_result:
+            self._logger.debug('Result %d: %d: (hidden)' % (counter, code, body))
+        else:
+            self._logger.debug('Result %d: %d: %s' % (counter, code, body))
+
+
         if code >= 400:
             raise Exception('Error: %d: %s' % (code, body))
         return code, body
