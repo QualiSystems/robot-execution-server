@@ -398,6 +398,8 @@ class CustomExecutionServer:
         if 'Authorization' in pheaders:
             pheaders['Authorization'] = '(token hidden)'
 
+        print(data)
+        print(pdata)
         self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, pheaders, pdata))
 
         if sys.version_info.major == 3:

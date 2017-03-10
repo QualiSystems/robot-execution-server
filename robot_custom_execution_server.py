@@ -115,7 +115,7 @@ class ProcessRunner():
         if 'CLOUDSHELL_PASSWORD' in penv:
             penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
 
-        self._logger.info('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
+        self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
         if self._running_on_windows:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env)
         else:
@@ -124,12 +124,12 @@ class ProcessRunner():
         output = ''
         if sys.version_info.major == 3:
             for line in iter(process.stdout.readline, b''):
-                self._logger.info('Output line: %s' % line)
+                self._logger.debug('Output line: %s' % line)
                 line = line.decode('utf-8', 'replace')
                 output += line
         else:
             for line in iter(process.stdout.readline, b''):
-                self._logger.info('Output line: %s' % line)
+                self._logger.debug('Output line: %s' % line)
                 output += line
         process.communicate()
         self._current_processes.pop(identifier, None)
@@ -157,7 +157,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         self._process_runner = ProcessRunner(self._logger)
 
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
-        # logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
+        logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         tempdir = tempfile.mkdtemp()
         os.chdir(tempdir)
 
