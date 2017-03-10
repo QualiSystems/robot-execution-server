@@ -210,10 +210,11 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         if test_arguments and test_arguments != 'None':
             t += ' ' + test_arguments
         t += ' %s' % test_path
+        
         output, robotretcode = self._process_runner.execute(t, execution_id, env={
             'CLOUDSHELL_RESERVATION_ID': reservation_id,
             'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address,
-            'CLOUDSHELL_PORT': str(cloudshell_port),
+            'CLOUDSHELL_SERVER_PORT': str(cloudshell_port),
             'CLOUDSHELL_USERNAME': cloudshell_username,
             'CLOUDSHELL_PASSWORD': cloudshell_password,
             'CLOUDSHELL_DOMAIN': cloudshell_domain,
