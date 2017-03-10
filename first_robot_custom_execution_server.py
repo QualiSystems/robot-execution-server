@@ -8,6 +8,8 @@ import os
 import tempfile
 import logging
 
+import re
+
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
     FailedCommandResult
 
@@ -108,7 +110,10 @@ class ProcessRunner():
             raise Exception(s)
 
     def execute(self, command, identifier):
-        self._logger.info('Execution %s: Running %s' % (identifier, command))
+        pcommand = command
+        pcommand = re.sub(r':[^@]*@', ':(password hidden)@', pcommand)
+
+        self._logger.info('Execution %s: Running %s' % (identifier, pcommand))
         if self._running_on_windows:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         else:
