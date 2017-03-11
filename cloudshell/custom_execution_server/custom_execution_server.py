@@ -379,6 +379,10 @@ class CustomExecutionServer:
         if self._token:
             headers['Authorization'] = 'Basic ' + self._token
 
+        headers = dict((k.encode('ascii') if isinstance(k, unicode) else k,
+                        v.encode('ascii') if isinstance(v, unicode) else v)
+                       for k, v in headers.items())
+
         if path.startswith('/'):
             path = path[1:]
 
