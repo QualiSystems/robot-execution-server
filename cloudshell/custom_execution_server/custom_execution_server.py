@@ -98,7 +98,6 @@ class ErrorCommandResult(CommandResult):
         self.error_description = error_description
 
 
-
 class CustomExecutionServerCommandHandler:
 
     def __init__(self):
@@ -379,14 +378,18 @@ class CustomExecutionServer:
         if self._token:
             headers['Authorization'] = 'Basic ' + self._token
 
-        headers = dict((k.encode('ascii') if isinstance(k, unicode) else k,
-                        v.encode('ascii') if isinstance(v, unicode) else v)
-                       for k, v in headers.items())
 
         if path.startswith('/'):
             path = path[1:]
 
         url = 'http://%s:%d/%s' % (self._cloudshell_host, self._cloudshell_port, path)
+
+        if sys.version_info.major == 2:
+            if isinstance(url, unicode):
+                url = url.encode('ascii')
+            headers = dict((k.encode('ascii') if isinstance(k, unicode) else k,
+                            v.encode('ascii') if isinstance(v, unicode) else v)
+                           for k, v in headers.items())
 
         if sys.version_info.major == 3:
             if isinstance(data, bytes):

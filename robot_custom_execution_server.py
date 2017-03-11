@@ -262,7 +262,7 @@ if __name__ == '__main__':
     else:
         def daemon_start():
             server.start()
-            s = '%s execution server %s started\nTo stop:\nkill -s SIGUSR1 %d' % (server_type, server_name, os.getpid())
+            s = '%s execution server %s started\nTo stop:\nkill %d' % (server_type, server_name, os.getpid())
             logger.info(s)
             print (s)
 
@@ -273,5 +273,5 @@ if __name__ == '__main__':
             logger.info("Stopped")
             print ("Stopped")
 
-        become_daemon_and_wait(daemon_start, daemon_stop, exit_signal=30)
+        become_daemon_and_wait(daemon_start, daemon_stop)
 

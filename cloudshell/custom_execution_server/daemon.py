@@ -3,7 +3,7 @@ import signal
 import time
 
 
-def become_daemon_and_wait(on_start, on_exit, exit_signal=30):
+def become_daemon_and_wait(on_start, on_exit, exit_signal=signal.SIGTERM):
     """
     Detaches from the terminal and sleeps in the main thread until the exit signal is received
 
