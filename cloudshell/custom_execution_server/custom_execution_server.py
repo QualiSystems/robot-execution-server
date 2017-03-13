@@ -338,7 +338,7 @@ class CustomExecutionServer:
                     test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
             result = self._command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
         except:
-            result = ErrorCommandResult('Unhandled Python exception', traceback.format_exc())
+            result = ErrorCommandResult('Unhandled Python exception', 'TODO bring exception back')  # traceback.format_exc())
 
         if not result:
             result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute() should return a CommandResult object or throw an exception')
