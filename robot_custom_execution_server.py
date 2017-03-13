@@ -76,7 +76,8 @@ for k in list(o.keys()):
     if '<EXECUTION_SERVER_NAME>' in v:
         o[k] = o[k].replace('<EXECUTION_SERVER_NAME>', server_name)
     if '<PROMPT_CLOUDSHELL_PASSWORD>' in v:
-        o[k] = o[k].replace('<PROMPT_CLOUDSHELL_PASSWORD>', server_name)
+        p = getpass.getpass('CloudShell password: ')
+        o[k] = o[k].replace('<PROMPT_CLOUDSHELL_PASSWORD>', p)
     if '<PROMPT_GIT_USERNAME>' in v:
         if sys.version_info.major == 3:
             u = input('Git username: ')
