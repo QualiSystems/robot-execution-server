@@ -6,9 +6,9 @@
   "cloudshell_password" : "<PROMPT_CLOUDSHELL_PASSWORD>",
   "cloudshell_domain" : "Global",
 
-  "cloudshell_execution_server_name" : "MyCES3",
+  "cloudshell_execution_server_name" : "MyCES5",
   "cloudshell_execution_server_description" : "Robot CES in Python",
-  "cloudshell_execution_server_type" : "Python",
+  "cloudshell_execution_server_type" : "Robot",
   "cloudshell_execution_server_capacity" : "5",
 
   "log_directory": "/var/log",

@@ -208,6 +208,7 @@ class CustomExecutionServer:
             except Exception as e:
                 if 'already' in str(e):
                     self._logger.info('Ignoring error: %s' % str(e))
+                    self.update()
                 else:
                     raise e
 
@@ -228,6 +229,7 @@ class CustomExecutionServer:
                       }))
 
     def update(self):
+        self._logger.info('Updating server %s: Description: %s, Capacity: %d' % (self._server_name, self._server_description, self._server_capacity))
         self._request('post', '/API/Execution/ExecutionServers',
                       data=json.dumps({
                           'Name': self._server_name,

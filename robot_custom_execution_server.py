@@ -18,8 +18,19 @@ from cloudshell.custom_execution_server.custom_execution_server import CustomExe
 from cloudshell.custom_execution_server.daemon import become_daemon_and_wait
 
 
+configfile = os.path.join(os.path.dirname(__file__), 'config.json')
+
+if len(sys.argv) > 1:
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i] in ['--config', '-c']:
+            if i+1 < len(sys.argv):
+                configfile = sys.argv[i+1]
+            else:
+                print('Usage: --config <path to config file> or -c <path to config file>')
+                sys.exit(1)
+
 try:
-    with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
+    with open(configfile) as f:
         o = json.load(f)
 except:
     print('''%s
@@ -71,38 +82,42 @@ if not server_type:
 if errors:
     raise Exception('Fix the following in config.json:\n' + '\n'.join(errors))
 
+cloudshell_username = o.get('cloudshell_username', 'admin')
+cloudshell_password = o.get('cloudshell_password')
+
+if '<PROMPT_CLOUDSHELL_USERNAME>' in cloudshell_username:
+    if sys.version_info.major == 3:
+        u = input('CloudShell username: ')
+    else:
+        u = raw_input('CloudShell username: ')
+    cloudshell_username = cloudshell_username.replace('<PROMPT_CLOUDSHELL_USERNAME>', u)
+if '<PROMPT_CLOUDSHELL_PASSWORD>' in cloudshell_password:
+    p = getpass.getpass('CloudShell password: ')
+    cloudshell_password = cloudshell_password.replace('<PROMPT_CLOUDSHELL_PASSWORD>', p)
+
+git_repo_url = o.get('git_repo_url')
+
+if '<PROMPT_GIT_USERNAME>' in git_repo_url:
+    if sys.version_info.major == 3:
+        u = input('Git username: ')
+    else:
+        u = raw_input('Git username: ')
+    git_repo_url = git_repo_url.replace('<PROMPT_GIT_USERNAME>', u)
+if '<PROMPT_GIT_PASSWORD>' in git_repo_url:
+    p = getpass.getpass('Git password: ')
+    p = p.replace('@', '%40')
+    git_repo_url = git_repo_url.replace('<PROMPT_GIT_PASSWORD>', p)
+
 for k in list(o.keys()):
     v = str(o[k])
     if '<EXECUTION_SERVER_NAME>' in v:
         o[k] = o[k].replace('<EXECUTION_SERVER_NAME>', server_name)
-    if '<PROMPT_CLOUDSHELL_USERNAME>' in v:
-        if sys.version_info.major == 3:
-            u = input('CloudShell username: ')
-        else:
-            u = raw_input('CloudShell username: ')
-        o[k] = o[k].replace('<PROMPT_CLOUDSHELL_USERNAME>', u)
-    if '<PROMPT_CLOUDSHELL_PASSWORD>' in v:
-        p = getpass.getpass('CloudShell password: ')
-        o[k] = o[k].replace('<PROMPT_CLOUDSHELL_PASSWORD>', p)
-    if '<PROMPT_GIT_USERNAME>' in v:
-        if sys.version_info.major == 3:
-            u = input('Git username: ')
-        else:
-            u = raw_input('Git username: ')
-        o[k] = o[k].replace('<PROMPT_GIT_USERNAME>', u)
-    if '<PROMPT_GIT_PASSWORD>' in v:
-        p = getpass.getpass('Git password: ')
-        p = p.replace('@', '%40')
-        o[k] = o[k].replace('<PROMPT_GIT_PASSWORD>', p)
 
 server_description = o.get('cloudshell_execution_server_description', '')
 server_capacity = int(o.get('cloudshell_execution_server_capacity', 5))
 cloudshell_snq_port = int(o.get('cloudshell_snq_port', 9000))
 cloudshell_port = int(o.get('cloudshell_port', 8029))
-cloudshell_username = o.get('cloudshell_username', 'admin')
-cloudshell_password = o.get('cloudshell_password')
 cloudshell_domain = o.get('cloudshell_domain', 'Global')
-git_repo_url = o.get('git_repo_url')
 log_directory = o.get('log_directory', '/var/log')
 log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
@@ -257,37 +272,23 @@ server = CustomExecutionServer(server_name=server_name,
                                cloudshell_password=cloudshell_password,
                                cloudshell_domain=cloudshell_domain,
 
-                               auto_register=False,
+                               auto_register=True,
                                auto_start=False)
 
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'register':
-            server.register()
-            print('Successfully registered.')
-            sys.exit(0)
-        elif sys.argv[1] == 'update':
-            server.update()
-            print('Successfully updated.')
-            sys.exit(0)
-        else:
-            print('Python custom execution server can take one of two optional arguments:')
-            print('register - register the execution server with details from config.json')
-            print('update - update the details of the execution server to those in config.json')
-            sys.exit(1)
-    else:
-        def daemon_start():
-            server.start()
-            s = '%s execution server %s started\nTo stop:\nkill %d' % (server_type, server_name, os.getpid())
-            logger.info(s)
-            print (s)
 
-        def daemon_stop():
-            logger.info("Stopping, please wait up to 2 minutes...")
-            print ("Stopping, please wait up to 2 minutes...")
-            server.stop()
-            logger.info("Stopped")
-            print ("Stopped")
+def daemon_start():
+    server.start()
+    s = '%s execution server %s started\nTo stop:\nkill %d' % (server_type, server_name, os.getpid())
+    logger.info(s)
+    print (s)
 
-        become_daemon_and_wait(daemon_start, daemon_stop)
+
+def daemon_stop():
+    logger.info("Stopping, please wait up to 2 minutes...")
+    print ("Stopping, please wait up to 2 minutes...")
+    server.stop()
+    logger.info("Stopped")
+    print ("Stopped")
+
+become_daemon_and_wait(daemon_start, daemon_stop)
 
