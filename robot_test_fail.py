@@ -1,4 +1,4 @@
-def test1_func(cloudshell_reservation_id, cloudshell_server_address, cloudshell_port, cloudshell_username, cloudshell_password, cloudshell_domain):
+def test_fail_func(cloudshell_reservation_id, cloudshell_server_address, cloudshell_port, cloudshell_username, cloudshell_password, cloudshell_domain):
     print('hello from ericr_dev')
     print('CloudShell reservation id: %s' % cloudshell_reservation_id)
     print('CloudShell server address: %s' % cloudshell_server_address)
