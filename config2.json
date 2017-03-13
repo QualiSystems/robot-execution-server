@@ -12,7 +12,7 @@
   "cloudshell_execution_server_capacity" : "5",
 
   "log_directory": "/var/log",
-  "log_level": "INFO",
+  "log_level": "DEBUG",
   "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/ericrqs/robot-execution-server"

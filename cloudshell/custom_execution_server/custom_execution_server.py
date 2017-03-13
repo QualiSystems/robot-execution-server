@@ -38,7 +38,14 @@ class CommandResult:
                 d = '(binary data)'
         except:
             pass
-        return '%s result=%s error_name=%s error_description=%s report_filename=%s report_data=<<<%s>>> report_mime_type=%s' % (self.__class__.__name__, self.result, self.error_name, self.error_description, self.report_filename, d, self.report_mime_type)
+        return '%s result=%s error_name=%s error_description=%s report_filename=%s report_data=<<<%s>>> report_mime_type=%s' % (
+            self.__class__.__name__,
+            self.result,
+            self.error_name,
+            self.error_description,
+            self.report_filename,
+            d,
+            self.report_mime_type)
 
 
 class StoppedCommandResult(CommandResult):
