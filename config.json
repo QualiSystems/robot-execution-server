@@ -2,7 +2,7 @@
   "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
-  "cloudshell_username" : "admin",
+  "cloudshell_username" : "<PROMPT_CLOUDSHELL_USERNAME>",
   "cloudshell_password" : "<PROMPT_CLOUDSHELL_PASSWORD>",
   "cloudshell_domain" : "Global",
 

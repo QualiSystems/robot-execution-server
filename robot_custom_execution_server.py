@@ -75,6 +75,12 @@ for k in list(o.keys()):
     v = str(o[k])
     if '<EXECUTION_SERVER_NAME>' in v:
         o[k] = o[k].replace('<EXECUTION_SERVER_NAME>', server_name)
+    if '<PROMPT_CLOUDSHELL_USERNAME>' in v:
+        if sys.version_info.major == 3:
+            u = input('CloudShell username: ')
+        else:
+            u = raw_input('CloudShell username: ')
+        o[k] = o[k].replace('<PROMPT_CLOUDSHELL_USERNAME>', u)
     if '<PROMPT_CLOUDSHELL_PASSWORD>' in v:
         p = getpass.getpass('CloudShell password: ')
         o[k] = o[k].replace('<PROMPT_CLOUDSHELL_PASSWORD>', p)
