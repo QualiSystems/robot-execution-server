@@ -10,6 +10,7 @@ import tempfile
 import logging
 import shutil
 import re
+import traceback
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
     FailedCommandResult
@@ -21,54 +22,44 @@ try:
     with open(os.path.join(os.path.dirname(__file__), 'config.json')) as f:
         o = json.load(f)
 except:
-    print('''Failed to load config.json from the same directory as the execution server.
+    print('''%s
+
+Failed to load config.json from the same directory as the main execution server .py file.
 
 Example config.json:
 {
   "cloudshell_server_address" : "192.168.2.108",
-  "cloudshell_port": 8029,                                           // optional
-  "cloudshell_snq_port": 9000,                                       // optional
-  "cloudshell_username" : "admin",                                   // optional, default 'admin'
+  "cloudshell_port": 8029,
+  "cloudshell_snq_port": 9000,
+  "cloudshell_username" : "admin",
 
   "cloudshell_password" : "myadminpassword",
   // or
-  "cloudshell_password" : "<ASK_AT_STARTUP>",                        // prompt for password at startup
+  "cloudshell_password" : "<PROMPT_CLOUDSHELL_PASSWORD>",
 
-  "cloudshell_domain" : "Global",                                    // optional, default 'Global'
+  "cloudshell_domain" : "Global",
 
   "cloudshell_execution_server_name" : "MyCES1",
-  "cloudshell_execution_server_description" : "Robot CES in Python", // optional
+  "cloudshell_execution_server_description" : "Robot CES in Python",
   "cloudshell_execution_server_type" : "Robot",
-  "cloudshell_execution_server_capacity" : "5",      // optional, default 5
+  "cloudshell_execution_server_capacity" : "5",
 
-  "log_directory": "/var/log",                       // . or full path - optional, default /var/log
-  "log_level": "INFO",                               // CRITICAL|ERROR|WARNING|INFO|DEBUG - optional, default INFO
-  "log_filename": "MyCES1.log",                      // optional, default <cloudshell_execution_server_name>.log
+  "log_directory": "/var/log",
+  "log_level": "INFO",
+  // CRITICAL | ERROR | WARNING | INFO | DEBUG
+  "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
-  "git_repo_url": "https://myuser:<ASK_AT_STARTUP>@github.com/myuser/myproj"  // prompt for password at startup
-  // or
-  "git_repo_url": "https://myuser@github.com/myuser/myproj"                   // prompt for passsword at startup
-  // or
-  "git_repo_url": "https://github.com/myuser/myproj"                          // clone without credentials
+  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj"
 
 }
+Note: Remove all // comments before using
 
-    ''')
+    ''' % traceback.format_exc())
     sys.exit(1)
-server_description = o.get('cloudshell_execution_server_description', '')
-server_capacity = int(o.get('cloudshell_execution_server_capacity', 5))
+
+cloudshell_server_address = o.get('cloudshell_server_address')
 server_name = o.get('cloudshell_execution_server_name')
 server_type = o.get('cloudshell_execution_server_type')
-cloudshell_server_address = o.get('cloudshell_server_address')
-cloudshell_snq_port = int(o.get('cloudshell_snq_port', 9000))
-cloudshell_port = int(o.get('cloudshell_port', 8029))
-cloudshell_username = o.get('cloudshell_username', 'admin')
-cloudshell_password = o.get('cloudshell_password')
-cloudshell_domain = o.get('cloudshell_domain', 'Global')
-git_repo_url = o.get('git_repo_url')
-log_directory = o.get('log_directory', '/var/log')
-log_level = o.get('log_level', 'WARNING')
-log_filename = o.get('log_filename', server_name + '.log')
 
 errors = []
 if not cloudshell_server_address:
@@ -80,16 +71,33 @@ if not server_type:
 if errors:
     raise Exception('Fix the following in config.json:\n' + '\n'.join(errors))
 
-if not cloudshell_password or cloudshell_password == '<ASK_AT_STARTUP>':
-    cloudshell_password = getpass.getpass('Enter password for CloudShell user %s: ' % cloudshell_username)
+for k in list(o.keys()):
+    if '<EXECUTION_SERVER_NAME>' in o[k]:
+        o[k] = o[k].replace('<EXECUTION_SERVER_NAME>', server_name)
+    if '<PROMPT_CLOUDSHELL_PASSWORD>' in o[k]:
+        o[k] = o[k].replace('<PROMPT_CLOUDSHELL_PASSWORD>', server_name)
+    if '<PROMPT_GIT_USERNAME>' in o[k]:
+        if sys.version_info.major == 3:
+            u = input('Git username: ')
+        else:
+            u = raw_input('Git username: ')
+        o[k] = o[k].replace('<PROMPT_GIT_USERNAME>', u)
+    if '<PROMPT_GIT_PASSWORD>' in o[k]:
+        p = getpass.getpass('Git password: ')
+        p = p.replace('@', '%40')
+        o[k] = o[k].replace('<PROMPT_GIT_PASSWORD>', p)
 
-if '<ASK_AT_STARTUP>' in git_repo_url or ('@' in git_repo_url and ':' not in git_repo_url.replace('://', '')):
-    s = getpass.getpass('Enter password for repo URL %s: ' % git_repo_url)
-    s = s.replace('@', '%40')
-    if '<ASK_AT_STARTUP>' in git_repo_url:
-        git_repo_url = git_repo_url.replace('<ASK_AT_STARTUP>', s)
-    else:
-        git_repo_url = git_repo_url.replace('@', ':%s@' % s)
+server_description = o.get('cloudshell_execution_server_description', '')
+server_capacity = int(o.get('cloudshell_execution_server_capacity', 5))
+cloudshell_snq_port = int(o.get('cloudshell_snq_port', 9000))
+cloudshell_port = int(o.get('cloudshell_port', 8029))
+cloudshell_username = o.get('cloudshell_username', 'admin')
+cloudshell_password = o.get('cloudshell_password')
+cloudshell_domain = o.get('cloudshell_domain', 'Global')
+git_repo_url = o.get('git_repo_url')
+log_directory = o.get('log_directory', '/var/log')
+log_level = o.get('log_level', 'INFO')
+log_filename = o.get('log_filename', server_name + '.log')
 
 
 class ProcessRunner():

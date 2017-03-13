@@ -3,7 +3,7 @@
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
   "cloudshell_username" : "admin",
-  "cloudshell_password" : "admin",
+  "cloudshell_password" : "<PROMPT_CLOUDSHELL_PASSWORD>",
   "cloudshell_domain" : "Global",
 
   "cloudshell_execution_server_name" : "MyCES1",
@@ -12,8 +12,9 @@
   "cloudshell_execution_server_capacity" : "5",
 
   "log_directory": "/var/log",
-  "log_level": "DEBUG",
+  "log_level": "INFO",
+  "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
-  "git_repo_url": "https://github.com/ericrqs/robot-execution-server"
+  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/ericrqs/robot-execution-server"
 
 }
