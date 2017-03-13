@@ -136,6 +136,7 @@ class ProcessRunner():
             s = 'Error: %d: %s failed: %s' % (c, command, o)
             self._logger.error(s)
             raise Exception(s)
+        return o, c
 
     def execute(self, command, identifier, env=None):
         env = env or {}
