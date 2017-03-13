@@ -72,17 +72,18 @@ if errors:
     raise Exception('Fix the following in config.json:\n' + '\n'.join(errors))
 
 for k in list(o.keys()):
-    if '<EXECUTION_SERVER_NAME>' in o[k]:
+    v = str(o[k])
+    if '<EXECUTION_SERVER_NAME>' in v:
         o[k] = o[k].replace('<EXECUTION_SERVER_NAME>', server_name)
-    if '<PROMPT_CLOUDSHELL_PASSWORD>' in o[k]:
+    if '<PROMPT_CLOUDSHELL_PASSWORD>' in v:
         o[k] = o[k].replace('<PROMPT_CLOUDSHELL_PASSWORD>', server_name)
-    if '<PROMPT_GIT_USERNAME>' in o[k]:
+    if '<PROMPT_GIT_USERNAME>' in v:
         if sys.version_info.major == 3:
             u = input('Git username: ')
         else:
             u = raw_input('Git username: ')
         o[k] = o[k].replace('<PROMPT_GIT_USERNAME>', u)
-    if '<PROMPT_GIT_PASSWORD>' in o[k]:
+    if '<PROMPT_GIT_PASSWORD>' in v:
         p = getpass.getpass('Git password: ')
         p = p.replace('@', '%40')
         o[k] = o[k].replace('<PROMPT_GIT_PASSWORD>', p)
