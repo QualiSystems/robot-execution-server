@@ -242,6 +242,14 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             'CLOUDSHELL_DOMAIN': cloudshell_domain,
         })
 
+        poutput = output
+
+        if sys.version_info.major == 3:
+            if isinstance(poutput, bytes):
+                poutput = poutput.decode('utf-8')
+        
+        self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, poutput))
+
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
 
         zipname = '%s_%s.zip' % (test_path, now)
