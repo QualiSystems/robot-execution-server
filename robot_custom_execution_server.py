@@ -269,7 +269,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             try:
                 zipoutput, _ = self._process_runner.execute_throwing('zip %s output.xml log.html report.html' % zipname, execution_id+'_zip')
             except:
-                return ErrorCommandResult('Robot failure', 'Failed to zip logs after Robot run:\n\n%s\n\n%s' % (output, traceback.format_exc()))
+                return ErrorCommandResult('Robot failure', 'Robot did not complete: %s' % poutput)
 
             with open(zipname, 'rb') as f:
                 zipdata = f.read()
