@@ -18,6 +18,20 @@ from cloudshell.custom_execution_server.custom_execution_server import CustomExe
 from cloudshell.custom_execution_server.daemon import become_daemon_and_wait
 
 
+def string23(b):
+    if sys.version_info.major == 3:
+        if isinstance(b, bytes):
+            return b.decode('utf-8', 'replace')
+    return b
+
+
+def input23(msg):
+    if sys.version_info.major == 3:
+        return input(msg)
+    else:
+        return raw_input(msg)
+
+
 configfile = os.path.join(os.path.dirname(__file__), 'config.json')
 
 if len(sys.argv) > 1:
@@ -42,11 +56,14 @@ Example config.json:
   "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
+
   "cloudshell_username" : "admin",
+  // or
+  "cloudshell_username" : "<PROMPT>",
 
   "cloudshell_password" : "myadminpassword",
   // or
-  "cloudshell_password" : "<PROMPT_CLOUDSHELL_PASSWORD>",
+  "cloudshell_password" : "<PROMPT>",
 
   "cloudshell_domain" : "Global",
 
@@ -63,7 +80,7 @@ Example config.json:
   "scratch_directory": "/tmp",
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj",
-  "git_default_checkout_version": "ericr_dev"
+  "git_default_checkout_version": "dev"
 
 }
 Note: Remove all // comments before using
@@ -85,31 +102,20 @@ if not server_type:
 if errors:
     raise Exception('Fix the following in config.json:\n' + '\n'.join(errors))
 
-cloudshell_username = o.get('cloudshell_username', 'admin')
-cloudshell_password = o.get('cloudshell_password')
+cloudshell_username = o.get('cloudshell_username', '<PROMPT>')
+cloudshell_password = o.get('cloudshell_password', '<PROMPT>')
 
-if '<PROMPT_CLOUDSHELL_USERNAME>' in cloudshell_username:
-    if sys.version_info.major == 3:
-        u = input('CloudShell username: ')
-    else:
-        u = raw_input('CloudShell username: ')
-    cloudshell_username = cloudshell_username.replace('<PROMPT_CLOUDSHELL_USERNAME>', u)
-if '<PROMPT_CLOUDSHELL_PASSWORD>' in cloudshell_password:
-    p = getpass.getpass('CloudShell password: ')
-    cloudshell_password = cloudshell_password.replace('<PROMPT_CLOUDSHELL_PASSWORD>', p)
+if '<PROMPT>' in cloudshell_username:
+    cloudshell_username = cloudshell_username.replace('<PROMPT>', input23('CloudShell username: '))
+if '<PROMPT>' in cloudshell_password:
+    cloudshell_password = cloudshell_password.replace('<PROMPT>', getpass.getpass('CloudShell password: '))
 
 git_repo_url = o.get('git_repo_url')
 
 if '<PROMPT_GIT_USERNAME>' in git_repo_url:
-    if sys.version_info.major == 3:
-        u = input('Git username: ')
-    else:
-        u = raw_input('Git username: ')
-    git_repo_url = git_repo_url.replace('<PROMPT_GIT_USERNAME>', u)
+    git_repo_url = git_repo_url.replace('<PROMPT_GIT_USERNAME>', input23('Git username: '))
 if '<PROMPT_GIT_PASSWORD>' in git_repo_url:
-    p = getpass.getpass('Git password: ')
-    p = p.replace('@', '%40')
-    git_repo_url = git_repo_url.replace('<PROMPT_GIT_PASSWORD>', p)
+    git_repo_url = git_repo_url.replace('<PROMPT_GIT_PASSWORD>', getpass.getpass('Git password: ').replace('@', '%40'))
 
 for k in list(o.keys()):
     v = str(o[k])
@@ -126,6 +132,7 @@ log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
 scratch_dir = o.get('scratch_dir', '/tmp')
 default_checkout_version = o.get('git_default_checkout_version', '/tmp')
+
 
 class ProcessRunner():
     def __init__(self, logger):
@@ -144,29 +151,25 @@ class ProcessRunner():
 
     def execute(self, command, identifier, env=None):
         env = env or {}
-        pcommand = command
-        pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
-        pcommand = re.sub(r"CLOUDSHELL_PASSWORD:[^']*", 'CLOUDSHELL_PASSWORD:(password hidden)', pcommand)
-        penv = dict(env)
-        if 'CLOUDSHELL_PASSWORD' in penv:
-            penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
+        if True:
+            pcommand = command
+            pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
+            pcommand = re.sub(r"CLOUDSHELL_PASSWORD:[^']*", 'CLOUDSHELL_PASSWORD:(password hidden)', pcommand)
+            penv = dict(env)
+            if 'CLOUDSHELL_PASSWORD' in penv:
+                penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
 
-        self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
+            self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
         if self._running_on_windows:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env)
         else:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid, env=env)
         self._current_processes[identifier] = process
         output = ''
-        if sys.version_info.major == 3:
-            for line in iter(process.stdout.readline, b''):
-                self._logger.debug('Output line: %s' % line)
-                line = line.decode('utf-8', 'replace')
-                output += line
-        else:
-            for line in iter(process.stdout.readline, b''):
-                self._logger.debug('Output line: %s' % line)
-                output += line
+        for line in iter(process.stdout.readline, b''):
+            line = string23(line)
+            self._logger.debug('Output line: %s' % line)
+            output += line
         process.communicate()
         self._current_processes.pop(identifier, None)
         if identifier in self._stopping_processes:
@@ -255,13 +258,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 robotretcode = -5000
                 output = 'Robot crashed: %s' % traceback.format_exc()
 
-            poutput = output
-
-            if sys.version_info.major == 3:
-                if isinstance(poutput, bytes):
-                    poutput = poutput.decode('utf-8')
-
-            self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, poutput))
+            self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, string23(output)))
 
             now = time.strftime("%b-%d-%Y_%H.%M.%S")
 
@@ -269,7 +266,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             try:
                 zipoutput, _ = self._process_runner.execute_throwing('zip %s output.xml log.html report.html' % zipname, execution_id+'_zip')
             except:
-                return ErrorCommandResult('Robot failure', 'Robot did not complete: %s' % poutput)
+                return ErrorCommandResult('Robot failure', 'Robot did not complete: %s' % string23(output))
 
             with open(zipname, 'rb') as f:
                 zipdata = f.read()

@@ -2,8 +2,8 @@
   "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
-  "cloudshell_username" : "<PROMPT_CLOUDSHELL_USERNAME>",
-  "cloudshell_password" : "<PROMPT_CLOUDSHELL_PASSWORD>",
+  "cloudshell_username" : "<PROMPT>",
+  "cloudshell_password" : "<PROMPT>",
   "cloudshell_domain" : "Global",
 
   "cloudshell_execution_server_name" : "MyCES5",

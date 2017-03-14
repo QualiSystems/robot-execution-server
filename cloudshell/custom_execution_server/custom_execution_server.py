@@ -19,6 +19,33 @@ else:
     from urllib.parse import quote
 
 
+def bytes23(s):
+    if sys.version_info.major == 3:
+        if isinstance(s, str):
+            return s.encode('utf-8', 'replace')
+        else:
+            return s or b''
+    else:
+        if isinstance(s, unicode):
+            return s.encode('utf-8', 'replace')
+        else:
+            return s or b''
+
+
+def string23ppbinary(s):
+    if sys.version_info.major == 3:
+        if isinstance(s, bytes):
+            return '(%d bytes binary data)' % len(s)
+        else:
+            return s or ''
+    else:
+        s = s or ''
+        try:
+            return s.decode('utf-8')
+        except:
+            return '(%d bytes binary data)' % len(s)
+
+
 class CommandResult:
     """
     Base class for command results
@@ -354,15 +381,6 @@ class CustomExecutionServer:
                               'ErrorName': result.error_name,
                           }))
             if result.report_filename:
-                if sys.version_info.major == 3:
-                    data = result.report_data
-                    if isinstance(data, str):
-                        data = data.encode('utf-8', 'replace')
-                else:
-                    data = result.report_data
-                    if isinstance(data, unicode):
-                        data = data.encode('utf-8', 'replace')
-
                 self._request('post', '/API/Execution/ExecutionReport/%s/%s/%s' % (quote(self._server_name),
                                                                                    execution_id,
                                                                                    quote(result.report_filename)),
@@ -370,7 +388,7 @@ class CustomExecutionServer:
                                   'Accept': 'application/json',
                                   'Content-Type': result.report_mime_type,
                               },
-                              data=data)
+                              data=bytes23(result.report_data))
         finally:
             self._execution_ids.remove(execution_id)
 
@@ -387,7 +405,6 @@ class CustomExecutionServer:
         if self._token:
             headers['Authorization'] = 'Basic ' + self._token
 
-
         if path.startswith('/'):
             path = path[1:]
 
@@ -400,18 +417,7 @@ class CustomExecutionServer:
                             v.encode('ascii') if isinstance(v, unicode) else v)
                            for k, v in headers.items())
 
-        if sys.version_info.major == 3:
-            if isinstance(data, bytes):
-                pdata = '(%d bytes binary data)' % len(data)
-            else:
-                pdata = data or ''
-        else:
-            pdata = data or ''
-            try:
-                pdata = pdata.decode('ascii')
-            except:
-                pdata = '(%d bytes binary data)' % len(data)
-
+        pdata = string23ppbinary(data)
         pdata = re.sub(r':[^@]*@', ':(password hidden)@', pdata)
         pdata = re.sub(r'"Password":\s*"[^"]*"', '"Password": "(password hidden)"', pdata)
         pheaders = dict(headers)
@@ -420,35 +426,19 @@ class CustomExecutionServer:
 
         self._logger.debug('Request %d: %s %s headers=%s data=<<<%s>>>' % (counter, method, url, pheaders, pdata))
 
-        if sys.version_info.major == 3:
-            if data:
-                if isinstance(data, str):
-                    data = data.encode('utf-8', 'replace')
-            else:
-                data = b''
-
-        request = Request(url, data, headers)
+        request = Request(url, bytes23(data), headers)
         request.get_method = lambda: method.upper()
         response = urlopen(request)
         body = response.read()
-        if sys.version_info.major == 3:
-            if body:
-                body = body.decode('utf-8')
-            else:
-                body = ''
-            pbody = body
-        else:
-            try:
-                pbody = body.decode('utf-8')
-            except:
-                pbody = '(%d bytes binary data)' % len(body)
+
+
         code = response.getcode()
         response.close()
 
         if hide_result:
             self._logger.debug('Result %d: %d: (hidden)' % (counter, code))
         else:
-            self._logger.debug('Result %d: %d: %s' % (counter, code, pbody))
+            self._logger.debug('Result %d: %d: %s' % (counter, code, string23ppbinary(body)))
 
 
         if code >= 400:
