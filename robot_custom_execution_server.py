@@ -233,21 +233,25 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             t += ' ' + test_arguments
         t += ' %s' % test_path
 
-        output, robotretcode = self._process_runner.execute(t, execution_id, env={
-            'CLOUDSHELL_RESERVATION_ID': reservation_id,
-            'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address,
-            'CLOUDSHELL_SERVER_PORT': str(cloudshell_port),
-            'CLOUDSHELL_USERNAME': cloudshell_username,
-            'CLOUDSHELL_PASSWORD': cloudshell_password,
-            'CLOUDSHELL_DOMAIN': cloudshell_domain,
-        })
+        try:
+            output, robotretcode = self._process_runner.execute(t, execution_id, env={
+                'CLOUDSHELL_RESERVATION_ID': reservation_id,
+                'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address,
+                'CLOUDSHELL_SERVER_PORT': str(cloudshell_port),
+                'CLOUDSHELL_USERNAME': cloudshell_username,
+                'CLOUDSHELL_PASSWORD': cloudshell_password,
+                'CLOUDSHELL_DOMAIN': cloudshell_domain,
+            })
+        except:
+            robotretcode = -5000
+            output = 'Robot crashed: %s' % traceback.format_exc()
 
         poutput = output
 
         if sys.version_info.major == 3:
             if isinstance(poutput, bytes):
                 poutput = poutput.decode('utf-8')
-        
+
         self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, poutput))
 
         now = time.strftime("%b-%d-%Y_%H.%M.%S")
