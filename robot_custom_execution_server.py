@@ -60,6 +60,8 @@ Example config.json:
   // CRITICAL | ERROR | WARNING | INFO | DEBUG
   "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
+  "scratch_directory": "/tmp",
+
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj"
 
 }
@@ -121,7 +123,7 @@ cloudshell_domain = o.get('cloudshell_domain', 'Global')
 log_directory = o.get('log_directory', '/var/log')
 log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
-
+scratch_dir = o.get('scratch_dir', '/tmp')
 
 class ProcessRunner():
     def __init__(self, logger):
@@ -190,16 +192,23 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
     def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
-        tempdir = tempfile.mkdtemp()
+        tempdir = tempfile.mkdtemp(dir=scratch_dir)
         os.chdir(tempdir)
         try:
 
             rjo = json.loads(reservation_json)
 
             git_branch_or_tag_spec = None
-            for v in rjo['TopologyInputs']:
-                if v['Name'] == 'TestVersion':
-                    git_branch_or_tag_spec = v['Value']
+
+            if 'VERSION=' in test_arguments:
+                m = re.search(r'VERSION=([-_./0-9a-zA-Z]*)', test_arguments)
+                if m:
+                    git_branch_or_tag_spec = m.groups()[0]
+
+            if not git_branch_or_tag_spec:
+                for v in rjo['TopologyInputs']:
+                    if v['Name'] == 'TestVersion':
+                        git_branch_or_tag_spec = v['Value']
             if git_branch_or_tag_spec == 'None':
                 git_branch_or_tag_spec = None
             # MYBRANCHNAME or tags/MYTAGNAME
