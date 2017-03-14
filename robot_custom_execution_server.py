@@ -194,72 +194,72 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         tempdir = tempfile.mkdtemp(dir=scratch_dir)
         os.chdir(tempdir)
-        try:
 
-            rjo = json.loads(reservation_json)
+        rjo = json.loads(reservation_json)
 
+        git_branch_or_tag_spec = None
+
+        versionre = r'TestVersion=([-_./0-9a-zA-Z]*)'
+        m = re.search(versionre, test_arguments)
+        if m:
+            git_branch_or_tag_spec = m.groups()[0]
+            test_arguments = re.sub(versionre, '', test_arguments).strip()
+
+        if not git_branch_or_tag_spec:
+            for v in rjo['TopologyInputs']:
+                if v['Name'] == 'TestVersion':
+                    git_branch_or_tag_spec = v['Value']
+        if git_branch_or_tag_spec == 'None':
             git_branch_or_tag_spec = None
+        # MYBRANCHNAME or tags/MYTAGNAME
 
-            versionre = r'TestVersion=([-_./0-9a-zA-Z]*)'
-            m = re.search(versionre, test_arguments)
-            if m:
-                git_branch_or_tag_spec = m.groups()[0]
-                test_arguments = re.sub(versionre, '', test_arguments).strip()
+        self._process_runner.execute_throwing('git clone %s repo' % git_repo_url, execution_id+'_git1')
 
-            if not git_branch_or_tag_spec:
-                for v in rjo['TopologyInputs']:
-                    if v['Name'] == 'TestVersion':
-                        git_branch_or_tag_spec = v['Value']
-            if git_branch_or_tag_spec == 'None':
-                git_branch_or_tag_spec = None
-            # MYBRANCHNAME or tags/MYTAGNAME
+        os.chdir(tempdir + '/repo')
 
-            self._process_runner.execute_throwing('git clone %s repo' % git_repo_url, execution_id+'_git1')
+        if git_branch_or_tag_spec:
+            self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2')
+        else:
+            self._logger.info('TestVersion not specified - taking latest from default branch')
 
-            os.chdir(tempdir + '/repo')
+        t = 'robot'
+        # t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
+        # t += ' --variable CLOUDSHELL_SERVER_ADDRESS:%s' % cloudshell_server_address
+        # t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
+        # t += ' --variable CLOUDSHELL_USERNAME:%s' % cloudshell_username
+        # t += " --variable 'CLOUDSHELL_PASSWORD:%s'" % cloudshell_password
+        # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
+        if test_arguments and test_arguments != 'None':
+            t += ' ' + test_arguments
+        t += ' %s' % test_path
 
-            if git_branch_or_tag_spec:
-                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2')
-            else:
-                self._logger.info('TestVersion not specified - taking latest from default branch')
+        output, robotretcode = self._process_runner.execute(t, execution_id, env={
+            'CLOUDSHELL_RESERVATION_ID': reservation_id,
+            'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address,
+            'CLOUDSHELL_SERVER_PORT': str(cloudshell_port),
+            'CLOUDSHELL_USERNAME': cloudshell_username,
+            'CLOUDSHELL_PASSWORD': cloudshell_password,
+            'CLOUDSHELL_DOMAIN': cloudshell_domain,
+        })
 
-            t = 'robot'
-            # t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
-            # t += ' --variable CLOUDSHELL_SERVER_ADDRESS:%s' % cloudshell_server_address
-            # t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
-            # t += ' --variable CLOUDSHELL_USERNAME:%s' % cloudshell_username
-            # t += " --variable 'CLOUDSHELL_PASSWORD:%s'" % cloudshell_password
-            # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
-            if test_arguments and test_arguments != 'None':
-                t += ' ' + test_arguments
-            t += ' %s' % test_path
+        now = time.strftime("%b-%d-%Y_%H.%M.%S")
 
-            output, robotretcode = self._process_runner.execute(t, execution_id, env={
-                'CLOUDSHELL_RESERVATION_ID': reservation_id,
-                'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address,
-                'CLOUDSHELL_SERVER_PORT': str(cloudshell_port),
-                'CLOUDSHELL_USERNAME': cloudshell_username,
-                'CLOUDSHELL_PASSWORD': cloudshell_password,
-                'CLOUDSHELL_DOMAIN': cloudshell_domain,
-            })
+        zipname = '%s_%s.zip' % (test_path, now)
+        try:
+            zipoutput, _ = self._process_runner.execute_throwing('zip %s output.xml log.html report.html' % zipname, execution_id+'_zip')
+        except:
+            return ErrorCommandResult('Robot failure', 'Failed to zip logs after Robot run:\n\n%s\n\n%s' % (output, traceback.format_exc()))
 
-            now = time.strftime("%b-%d-%Y_%H.%M.%S")
+        with open(zipname, 'rb') as f:
+            zipdata = f.read()
 
-            zipname = '%s_%s.zip' % (test_path, now)
-            try:
-                zipoutput, _ = self._process_runner.execute_throwing('zip %s output.xml log.html report.html' % zipname, execution_id+'_zip')
-            except:
-                return ErrorCommandResult('Robot failure', 'Failed to zip logs after Robot run:\n\n%s\n\n%s' % (output, traceback.format_exc()))
+        os.chdir('/')
+        shutil.rmtree(tempdir)
 
-            with open(zipname, 'rb') as f:
-                zipdata = f.read()
-            if robotretcode == 0:
-                return PassedCommandResult(zipname, zipdata, 'application/zip')
-            else:
-                return FailedCommandResult(zipname, zipdata, 'application/zip')
-        finally:
-            os.chdir('/')
-            shutil.rmtree(tempdir)
+        if robotretcode == 0:
+            return PassedCommandResult(zipname, zipdata, 'application/zip')
+        else:
+            return FailedCommandResult(zipname, zipdata, 'application/zip')
 
     def stop(self, execution_id, logger):
         logger.info('stop %s\n' % execution_id)
