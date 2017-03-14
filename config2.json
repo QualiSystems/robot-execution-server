@@ -17,6 +17,7 @@
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/ericrqs/robot-execution-server"
+  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/ericrqs/robot-execution-server",
+  "git_default_checkout_version": "ericr_dev"
 
 }

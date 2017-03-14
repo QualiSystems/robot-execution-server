@@ -62,7 +62,8 @@ Example config.json:
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj"
+  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj",
+  "git_default_checkout_version": "ericr_dev"
 
 }
 Note: Remove all // comments before using
@@ -124,6 +125,7 @@ log_directory = o.get('log_directory', '/var/log')
 log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
 scratch_dir = o.get('scratch_dir', '/tmp')
+default_checkout_version = o.get('git_default_checkout_version', '/tmp')
 
 class ProcessRunner():
     def __init__(self, logger):
@@ -213,6 +215,10 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                         git_branch_or_tag_spec = v['Value']
             if git_branch_or_tag_spec == 'None':
                 git_branch_or_tag_spec = None
+
+
+            if not git_branch_or_tag_spec:
+                git_branch_or_tag_spec = default_checkout_version
             # MYBRANCHNAME or tags/MYTAGNAME
 
             self._process_runner.execute_throwing('git clone %s repo' % git_repo_url, execution_id+'_git1')
@@ -274,9 +280,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 return PassedCommandResult(zipname, zipdata, 'application/zip')
             else:
                 return FailedCommandResult(zipname, zipdata, 'application/zip')
-        except:
+        except Exception as ue:
             self._logger.error(traceback.format_exc())
-
+            raise ue
 
     def stop(self, execution_id, logger):
         logger.info('stop %s\n' % execution_id)
