@@ -244,12 +244,12 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             try:
                 output, robotretcode = self._process_runner.execute(t, execution_id, env={
-                    'CLOUDSHELL_RESERVATION_ID': reservation_id,
-                    'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address,
-                    'CLOUDSHELL_SERVER_PORT': str(cloudshell_port),
-                    'CLOUDSHELL_USERNAME': cloudshell_username,
-                    'CLOUDSHELL_PASSWORD': cloudshell_password,
-                    'CLOUDSHELL_DOMAIN': cloudshell_domain,
+                    'CLOUDSHELL_RESERVATION_ID': reservation_id or 'None',
+                    'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address or 'None',
+                    'CLOUDSHELL_SERVER_PORT': str(cloudshell_port) or 'None',
+                    'CLOUDSHELL_USERNAME': cloudshell_username or 'None',
+                    'CLOUDSHELL_PASSWORD': cloudshell_password or 'None',
+                    'CLOUDSHELL_DOMAIN': cloudshell_domain or 'None',
                 })
             except:
                 robotretcode = -5000
