@@ -200,10 +200,11 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             git_branch_or_tag_spec = None
 
-            if 'VERSION=' in test_arguments:
-                m = re.search(r'VERSION=([-_./0-9a-zA-Z]*)', test_arguments)
-                if m:
-                    git_branch_or_tag_spec = m.groups()[0]
+            versionre = r'TestVersion=([-_./0-9a-zA-Z]*)'
+            m = re.search(versionre, test_arguments)
+            if m:
+                git_branch_or_tag_spec = m.groups()[0]
+                test_arguments = re.sub(versionre, '', test_arguments).strip()
 
             if not git_branch_or_tag_spec:
                 for v in rjo['TopologyInputs']:
