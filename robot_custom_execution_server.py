@@ -22,7 +22,7 @@ def string23(b):
     if sys.version_info.major == 3:
         if isinstance(b, bytes):
             return b.decode('utf-8', 'replace')
-    return b
+    return b or ''
 
 
 def input23(msg):

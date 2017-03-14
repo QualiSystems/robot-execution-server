@@ -32,6 +32,13 @@ def bytes23(s):
             return s or b''
 
 
+def string23(b):
+    if sys.version_info.major == 3:
+        if isinstance(b, bytes):
+            return b.decode('utf-8')
+    return b or ''
+
+
 def string23ppbinary(s):
     if sys.version_info.major == 3:
         if isinstance(s, bytes):
@@ -430,8 +437,6 @@ class CustomExecutionServer:
         request.get_method = lambda: method.upper()
         response = urlopen(request)
         body = response.read()
-
-
         code = response.getcode()
         response.close()
 
@@ -440,7 +445,6 @@ class CustomExecutionServer:
         else:
             self._logger.debug('Result %d: %d: %s' % (counter, code, string23ppbinary(body)))
 
-
         if code >= 400:
-            raise Exception('Error: %d: %s' % (code, body))
-        return code, body
+            raise Exception('Error: %d: %s' % (code, string23ppbinary(body)))
+        return code, string23(body)
