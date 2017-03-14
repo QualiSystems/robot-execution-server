@@ -102,7 +102,7 @@ class ErrorCommandResult(CommandResult):
         CommandResult.__init__(self)
         self.result = 'Error'
         self.error_name = error_name
-        self.error_description = error_description
+        self.error_description = re.sub(r'[^0-9a-zA-Z":.,/ \n]', '_', error_description.replace('\t', '    '))
 
 
 class CustomExecutionServerCommandHandler:
