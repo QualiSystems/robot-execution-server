@@ -198,7 +198,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             tempdir = tempfile.mkdtemp(dir=scratch_dir)
             os.chdir(tempdir)
 
-            rjo = json.loads(reservation_json)
+            resinfo = json.loads(reservation_json) if reservation_json else None
 
             git_branch_or_tag_spec = None
 
@@ -210,9 +210,10 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                     test_arguments = re.sub(versionre, '', test_arguments).strip()
 
             if not git_branch_or_tag_spec:
-                for v in rjo['TopologyInputs']:
-                    if v['Name'] == 'TestVersion':
-                        git_branch_or_tag_spec = v['Value']
+                if resinfo:
+                    for v in resinfo['TopologyInputs']:
+                        if v['Name'] == 'TestVersion':
+                            git_branch_or_tag_spec = v['Value']
             if git_branch_or_tag_spec == 'None':
                 git_branch_or_tag_spec = None
 
