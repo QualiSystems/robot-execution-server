@@ -198,7 +198,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             tempdir = tempfile.mkdtemp(dir=scratch_dir)
             os.chdir(tempdir)
 
-            resinfo = json.loads(reservation_json) if reservation_json else None
+            resinfo = json.loads(reservation_json) if reservation_json and reservation_json != 'None' else None
 
             git_branch_or_tag_spec = None
 
