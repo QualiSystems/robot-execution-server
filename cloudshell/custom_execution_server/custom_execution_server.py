@@ -84,7 +84,7 @@ class CommandResult:
 
 class StoppedCommandResult(CommandResult):
     """
-    Result returned by the system when a stop request was received from CloudShellr
+    Result to return when your stop_command() handler was called
     """
     def __init__(self):
         CommandResult.__init__(self)
@@ -130,7 +130,7 @@ class FailedCommandResult(CommandResult):
 class ErrorCommandResult(CommandResult):
     """
     Result to return when an error occurred -- includes error message and description but not an output file
-    Also sent automatically by the system if the execute() implementation threw an exception
+    Also sent automatically by the system if execute_command() handler threw an exception
     """
     def __init__(self, error_name, error_description):
         CommandResult.__init__(self)
@@ -145,7 +145,7 @@ class CustomExecutionServerCommandHandler:
         pass
 
     @abstractmethod
-    def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
+    def execute_command(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         """
         Executes the requested command.
 
@@ -153,7 +153,7 @@ class CustomExecutionServerCommandHandler:
 
         Will be called in its own thread.
 
-        Return an arbitrary CommandResult when the command completes, successfully or not.
+        Return a CommandResult when the command completes, successfully or not.
 
         An exception can be thrown -- it will be automatically caught and wrapped in an ErrorCommandResult.
 
@@ -167,12 +167,12 @@ class CustomExecutionServerCommandHandler:
         :return: CommandResult : Use one of CommandResult subclasses - indicate success or failure, include report data
         :raises: Exception : Will be automatically caught and wrapped in ErrorCommandResult
         """
-        raise Exception('ExecuteCommandHandler.execute() was not implemented')
+        raise Exception('ExecuteCommandHandler.execute_command() was not implemented')
 
     @abstractmethod
-    def stop(self, execution_id, logger):
+    def stop_command(self, execution_id, logger):
         """
-        Send a message to a running execute() body corresponding to execution_id to signal it to exit
+        Send a message to a running execute_command() thread corresponding to execution_id to signal it to exit
 
         :param execution_id:
         :param logger:
@@ -199,7 +199,7 @@ class CustomExecutionServer:
         :param server_type: str : an execution server type registered manually in CloudShell beforehand
         :param server_capacity: int : number of concurrent commands CloudShell should send us
 
-        :param command_handler: CommandHandler : your custom implementation of CommandHandler
+        :param command_handler: CustomExecutionServerCommandHandler : your custom implementation of CustomExecutionServerCommandHandler
 
         :param logger: logging.Logger
 
@@ -355,7 +355,7 @@ class CustomExecutionServer:
                 th.daemon = True
                 th.start()
             elif command_type == 'stopExecution':
-                self._command_handler.stop(execution_id, self._logger)
+                self._command_handler.stop_command(execution_id, self._logger)
             elif command_type == 'updateFiles':
                 # Must send this response or the execution server will be disabled
                 self._request('post', '/API/Execution/UpdateFilesEnded',
@@ -370,12 +370,12 @@ class CustomExecutionServer:
             self._logger.info(
                 'Executing test_path=%s test_arguments=%s execution_id=%s username=%s reservation_id=%s reservation_json=%s' % (
                     test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
-            result = self._command_handler.execute(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
+            result = self._command_handler.execute_command(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
         except:
             result = ErrorCommandResult('Unhandled Python exception', traceback.format_exc())
 
         if not result:
-            result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute() should return a CommandResult object or throw an exception')
+            result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute_command() should return a CommandResult object or throw an exception')
 
         self._logger.info('Result for execution %s: %s' % (execution_id, result))
         try:

@@ -13,7 +13,7 @@ import re
 import traceback
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
-    FailedCommandResult, ErrorCommandResult
+    FailedCommandResult, ErrorCommandResult, StoppedCommandResult
 
 from cloudshell.custom_execution_server.daemon import become_daemon_and_wait
 
@@ -174,7 +174,7 @@ class ProcessRunner():
         self._current_processes.pop(identifier, None)
         if identifier in self._stopping_processes:
             self._stopping_processes.remove(identifier)
-            return None
+            return None, -6000
         return output, process.returncode
 
     def stop(self, identifier):
@@ -195,7 +195,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         self._logger = logger
         self._process_runner = ProcessRunner(self._logger)
 
-    def execute(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
+    def execute_command(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         try:
             tempdir = tempfile.mkdtemp(dir=scratch_dir)
@@ -258,6 +258,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 robotretcode = -5000
                 output = 'Robot crashed: %s' % traceback.format_exc()
 
+            if robotretcode == -6000:
+                return StoppedCommandResult()
+
             self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, string23(output)))
 
             now = time.strftime("%b-%d-%Y_%H.%M.%S")
@@ -282,7 +285,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             self._logger.error(traceback.format_exc())
             raise ue
 
-    def stop(self, execution_id, logger):
+    def stop_command(self, execution_id, logger):
         logger.info('stop %s\n' % execution_id)
         self._process_runner.stop(execution_id)
 

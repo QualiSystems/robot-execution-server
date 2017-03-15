@@ -6,7 +6,7 @@
   "cloudshell_password" : "admin",
   "cloudshell_domain" : "Global",
 
-  "cloudshell_execution_server_name" : "MyCES5",
+  "cloudshell_execution_server_name" : "MyCES6",
   "cloudshell_execution_server_description" : "Robot CES in Python",
   "cloudshell_execution_server_type" : "Robot",
   "cloudshell_execution_server_capacity" : "5",
