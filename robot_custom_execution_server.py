@@ -286,12 +286,15 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         logger.info('stop %s\n' % execution_id)
         self._process_runner.stop(execution_id)
 
+log_pathname = '%s/%s' % (log_directory, log_filename)
 logger = logging.getLogger(server_name)
-handler = logging.FileHandler('%s/%s' % (log_directory, log_filename))
+handler = logging.FileHandler(log_pathname)
 handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
 logger.addHandler(handler)
 if log_level:
     logger.setLevel(logging.getLevelName(log_level.upper()))
+
+print('\nLogging to %s\n' % log_pathname)
 
 server = CustomExecutionServer(server_name=server_name,
                                server_description=server_description,
