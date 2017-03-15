@@ -330,4 +330,3 @@ def daemon_stop():
     print ("Stopped")
 
 become_daemon_and_wait(daemon_start, daemon_stop)
-

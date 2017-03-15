@@ -9,7 +9,7 @@ def become_daemon_and_wait(on_start, on_exit, exit_signal=signal.SIGTERM):
 
     :param on_start: function with no arguments that starts the service threads
     :param on_exit: function with no arguments that stops the service threads (does not need to exit the process)
-    :param exit_signal: signal that will trigger shutdown, by default SIGUSR1
+    :param exit_signal: signal that will trigger shutdown, by default SIGTERM
     :return:
     """
     def handler0(signum, frame):
