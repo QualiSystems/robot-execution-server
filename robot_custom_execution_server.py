@@ -80,7 +80,7 @@ Example config.json:
   "scratch_directory": "/tmp",
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj",
-  "git_default_checkout_version": "dev"
+  "git_default_checkout_version": "master"
 
 }
 Note: Remove all // comments before using

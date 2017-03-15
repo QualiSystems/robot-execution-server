@@ -6,7 +6,7 @@
   "cloudshell_password" : "<PROMPT>",
   "cloudshell_domain" : "Global",
 
-  "cloudshell_execution_server_name" : "MyCES3",
+  "cloudshell_execution_server_name" : "RobotExecutionServer1",
   "cloudshell_execution_server_description" : "Robot CES in Python",
   "cloudshell_execution_server_type" : "Python",
   "cloudshell_execution_server_capacity" : "5",
@@ -17,7 +17,7 @@
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/ericrqs/robot-execution-server",
-  "git_default_checkout_version": "ericr_dev"
+  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/testsrepo",
+  "git_default_checkout_version": "master"
 
 }
