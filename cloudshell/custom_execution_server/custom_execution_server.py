@@ -248,9 +248,10 @@ class CustomExecutionServer:
                 self.register()
             except Exception as e:
                 if 'already' in str(e):
-                    self._logger.info('Ignoring error: %s' % str(e))
+                    self._logger.info('Execution server %s already exists on CloudShell server %s' % (self._server_name, self._cloudshell_host))
                     self.update()
                 else:
+                    self._logger.info('Failed to register execution server %s (type %s) on CloudShell server %s' % (self._server_name, self._server_type, self._cloudshell_host))
                     raise e
 
         if auto_start:
@@ -268,9 +269,10 @@ class CustomExecutionServer:
                           'Type': self._server_type,
                           'Capacity': self._server_capacity,
                       }))
+        self._logger.info('Successfully registered execution server %s (type %s) on CloudShell server %s' % (self._server_name, self._server_type, self._cloudshell_host))
 
     def update(self):
-        self._logger.info('Updating server %s: Description: %s, Capacity: %d' % (self._server_name, self._server_description, self._server_capacity))
+        self._logger.info('Updating execution server %s on CloudShell server %s: Description: %s, Capacity: %d' % (self._server_name, self._cloudshell_host, self._server_description, self._server_capacity))
         self._request('post', '/API/Execution/ExecutionServers',
                       data=json.dumps({
                           'Name': self._server_name,
