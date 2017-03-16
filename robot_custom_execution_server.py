@@ -263,6 +263,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                     'CLOUDSHELL_USERNAME': cloudshell_username or 'None',
                     'CLOUDSHELL_PASSWORD': cloudshell_password or 'None',
                     'CLOUDSHELL_DOMAIN': cloudshell_domain or 'None',
+                    'CLOUDSHELL_RESERVATION_INFO': reservation_json or 'None',
                 })
             except:
                 robotretcode = -5000
