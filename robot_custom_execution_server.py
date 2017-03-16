@@ -31,37 +31,7 @@ def input23(msg):
     else:
         return raw_input(msg)
 
-
-configfile = os.path.join(os.path.dirname(__file__), 'config.json')
-
-if len(sys.argv) > 1:
-    usage = '''CloudShell Robot execution server automatic self-registration and launch
-Usage: 
-    %s                                      # run with %s
-    %s --config <path to JSON config file>  # run with JSON config file from custom location
-    %s -c <path to JSON config file>        # run with JSON config file from custom location
-The server will run in the background. Send SIGTERM to shut it down.
-''' % (sys.argv[0], configfile, sys.argv[0], sys.argv[0])
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] in ['--help', '-h', '-help', '/?', '/help', '-?']:
-            print(usage)
-            sys.exit(1)
-        if sys.argv[i] in ['--config', '-c']:
-            if i+1 < len(sys.argv):
-                configfile = sys.argv[i+1]
-            else:
-                print(usage)
-                sys.exit(1)
-
-try:
-    with open(configfile) as f:
-        o = json.load(f)
-except:
-    print('''%s
-
-Failed to load JSON config file "%s".
-
-Example config.json:
+jsonexample = '''Example config.json:
 {
   "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
@@ -94,8 +64,41 @@ Example config.json:
 
 }
 Note: Remove all // comments before using
+'''
+configfile = os.path.join(os.path.dirname(__file__), 'config.json')
 
-    ''' % (traceback.format_exc(), configfile))
+if len(sys.argv) > 1:
+    usage = '''CloudShell Robot execution server automatic self-registration and launch
+Usage: 
+    python %s                                      # run with %s
+    python %s --config <path to JSON config file>  # run with JSON config file from custom location
+    python %s -c <path to JSON config file>        # run with JSON config file from custom location
+
+%s
+The server will run in the background. Send SIGTERM to shut it down.
+''' % (sys.argv[0], configfile, sys.argv[0], sys.argv[0], jsonexample)
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i] in ['--help', '-h', '-help', '/?', '/help', '-?']:
+            print(usage)
+            sys.exit(1)
+        if sys.argv[i] in ['--config', '-c']:
+            if i+1 < len(sys.argv):
+                configfile = sys.argv[i+1]
+            else:
+                print(usage)
+                sys.exit(1)
+
+try:
+    with open(configfile) as f:
+        o = json.load(f)
+except:
+    print('''%s
+
+Failed to load JSON config file "%s".
+
+%s
+
+    ''' % (traceback.format_exc(), configfile, jsonexample))
     sys.exit(1)
 
 cloudshell_server_address = o.get('cloudshell_server_address')
