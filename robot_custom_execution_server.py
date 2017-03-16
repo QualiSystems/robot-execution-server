@@ -41,7 +41,7 @@ Usage:
     %s --config <path to JSON config file>  # run with JSON config file from custom location
     %s -c <path to JSON config file>        # run with JSON config file from custom location
 The server will run in the background. Send SIGTERM to shut it down.
-''' % (sys.argv[0], configfile, sys.argv[0], sys.argv[0], sys.argv[0])
+''' % (sys.argv[0], configfile, sys.argv[0], sys.argv[0])
     for i in range(1, len(sys.argv)):
         if sys.argv[i] in ['--help', '-h', '-help', '/?', '/help', '-?']:
             print(usage)
