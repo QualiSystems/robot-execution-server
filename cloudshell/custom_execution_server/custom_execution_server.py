@@ -149,11 +149,11 @@ class CustomExecutionServerCommandHandler:
         """
         Executes the requested command.
 
-        Should periodically check for a custom stop signal sent from your StopCommandHandler.stop(execution_id).
+        Should periodically check for a custom stop signal sent to your CustomExecutionServerCommandHandler.stop_execution(execution_id).
 
         Will be called in its own thread.
 
-        Return a CommandResult when the command completes, successfully or not.
+        Return a new CommandResult object when the command completes, such as a PassedCommandResult or FailedCommandResult.
 
         An exception can be thrown -- it will be automatically caught and wrapped in an ErrorCommandResult.
 
@@ -162,10 +162,10 @@ class CustomExecutionServerCommandHandler:
         :param execution_id: str
         :param username: str
         :param reservation_id: str : id of the reservation automatically reserved before starting the job
-        :param reservation_json: str : If a reservation id was included, JSON describing the items in the reservation
+        :param reservation_json: str : if a reservation id was included, JSON describing the items in the reservation
         :param logger:
-        :return: CommandResult : Use one of CommandResult subclasses - indicate success or failure, include report data
-        :raises: Exception : Will be automatically caught and wrapped in ErrorCommandResult
+        :return: CommandResult : use one of CommandResult subclasses - indicate success or failure, include report data or error message
+        :raises: Exception : will be automatically caught and wrapped in ErrorCommandResult
         """
         raise Exception('ExecuteCommandHandler.execute_command() was not implemented')
 
@@ -210,7 +210,7 @@ class CustomExecutionServer:
         :param cloudshell_domain: str
 
         :param auto_register: bool : automatically register this execution server in CloudShell from the constructor, ignoring 'already registered' error
-        :param auto_start: bool : automatically start the server threads from in the constructor
+        :param auto_start: bool : automatically start the server threads from in the constructor - what to do next, including keeping the process alive, is up to you
         """
         self._cloudshell_host = cloudshell_host
         self._cloudshell_port = cloudshell_port
