@@ -266,9 +266,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                     'CLOUDSHELL_DOMAIN': cloudshell_domain or 'None',
                     'CLOUDSHELL_RESERVATION_INFO': reservation_json or 'None',
                 })
-            except:
+            except Exception as uue:
                 robotretcode = -5000
-                output = 'Robot crashed: %s' % traceback.format_exc()
+                output = 'Robot crashed: %s: %s' % (uue, traceback.format_exc())
 
             if robotretcode == -6000:
                 return StoppedCommandResult()
@@ -296,7 +296,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             else:
                 return FailedCommandResult(zipname, zipdata, 'application/zip')
         except Exception as ue:
-            self._logger.error(traceback.format_exc())
+            self._logger.error(str(ue) + ': ' + traceback.format_exc())
             raise ue
 
     def stop_command(self, execution_id, logger):
