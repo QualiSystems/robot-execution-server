@@ -337,7 +337,7 @@ server = CustomExecutionServer(server_name=server_name,
 
 def daemon_start():
     server.start()
-    s = '%s execution server %s started\nTo stop:\nkill %d\n\nIt is safe to close this terminal\n' % (server_type, server_name, os.getpid())
+    s = '\n\n%s execution server %s started\nTo stop %s:\nkill %d\n\nIt is safe to close this terminal.\n' % (server_type, server_name, server_name, os.getpid())
     logger.info(s)
     print (s)
 
