@@ -213,7 +213,6 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         try:
             tempdir = tempfile.mkdtemp(dir=scratch_dir)
-            os.chdir(tempdir)
 
             resinfo = json.loads(reservation_json) if reservation_json and reservation_json != 'None' else None
 
@@ -239,12 +238,10 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 git_branch_or_tag_spec = default_checkout_version
             # MYBRANCHNAME or tags/MYTAGNAME
 
-            self._process_runner.execute_throwing('git clone %s repo' % git_repo_url, execution_id+'_git1')
-
-            os.chdir(tempdir + '/repo')
+            self._process_runner.execute_throwing('git clone %s %s/repo' % (git_repo_url, tempdir), execution_id+'_git1')
 
             if git_branch_or_tag_spec:
-                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2')
+                self._process_runner.execute_throwing('git checkout %s %s' % (git_branch_or_tag_spec, tempdir), execution_id+'_git2')
             else:
                 self._logger.info('TestVersion not specified - taking latest from default branch')
 
@@ -285,14 +282,13 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             zipname = '%s_%s.zip' % (test_path, now)
             try:
-                zipoutput, _ = self._process_runner.execute_throwing('zip %s output.xml log.html report.html' % zipname, execution_id+'_zip')
+                zipoutput, _ = self._process_runner.execute_throwing('zip -j %s/%s %s/output.xml %s/log.html %s/report.html' % (tempdir, zipname, tempdir, tempdir, tempdir), execution_id+'_zip')
             except:
                 return ErrorCommandResult('Robot failure', 'Robot did not complete: %s' % string23(output))
 
             with open(zipname, 'rb') as f:
                 zipdata = f.read()
 
-            os.chdir('/')
             shutil.rmtree(tempdir)
 
             if robotretcode == 0:
