@@ -136,7 +136,13 @@ class ErrorCommandResult(CommandResult):
         CommandResult.__init__(self)
         self.result = 'Error'
         self.error_name = error_name
-        self.error_description = re.sub(r'[^-\[\]0-9a-zA-Z:/()*., \n]', '_', error_description.replace('\t', '    '))[:300]
+        s = error_description
+        s = re.sub(r' +', ' ', s)
+        s = s.replace('==', '')
+        s = s.replace('--', '')
+        s = s.replace('\t', '  ')
+        s = re.sub(r'[^-\[\]0-9a-zA-Z:/()*., \n]', '_', s)
+        self.error_description = s[:300]
 
 
 class CustomExecutionServerCommandHandler:
