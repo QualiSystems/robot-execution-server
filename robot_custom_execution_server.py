@@ -11,6 +11,7 @@ import logging
 import shutil
 import re
 import traceback
+from logging.handlers import RotatingFileHandler
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
     FailedCommandResult, ErrorCommandResult, StoppedCommandResult
@@ -308,7 +309,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
 log_pathname = '%s/%s' % (log_directory, log_filename)
 logger = logging.getLogger(server_name)
-handler = logging.FileHandler(log_pathname)
+handler = RotatingFileHandler(log_pathname, maxBytes=100000, backupCount=100)
 handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
 logger.addHandler(handler)
 if log_level:
