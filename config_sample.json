@@ -1,9 +1,9 @@
 {
-  "cloudshell_server_address" : "192.168.41.79",
+  "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
-  "cloudshell_username" : "admin",
-  "cloudshell_password" : "admin",
+  "cloudshell_username" : "<PROMPT>",
+  "cloudshell_password" : "<PROMPT>",
   "cloudshell_domain" : "Global",
 
   "cloudshell_execution_server_name" : "RobotExecutionServer1",
@@ -12,11 +12,12 @@
   "cloudshell_execution_server_capacity" : "5",
 
   "log_directory": "/var/log",
-  "log_level": "DEBUG",
+  "log_level": "INFO",
   "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://github.com/ericrqs/robot-tests"
+  "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/testsrepo",
+  "git_default_checkout_version": "master"
 
 }
