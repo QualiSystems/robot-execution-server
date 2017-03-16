@@ -238,7 +238,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 git_branch_or_tag_spec = default_checkout_version
             # MYBRANCHNAME or tags/MYTAGNAME
 
-            self._process_runner.execute_throwing('git clone %s %s/repo' % (git_repo_url, tempdir), execution_id+'_git1')
+            self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, tempdir), execution_id+'_git1')
 
             if git_branch_or_tag_spec:
                 self._process_runner.execute_throwing('git checkout %s %s' % (git_branch_or_tag_spec, tempdir), execution_id+'_git2')
