@@ -254,7 +254,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
             if test_arguments and test_arguments != 'None':
                 t += ' ' + test_arguments
-            t += ' %s' % test_path
+            t += ' %s/%s' % (tempdir, test_path)
 
             try:
                 output, robotretcode = self._process_runner.execute(t, execution_id, env={
@@ -276,7 +276,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, string23(output)))
 
             if 'Data source does not exist' in output:
-                return ErrorCommandResult('Robot failure', 'Test file %s missing (at version %s). Original error: %s' % (test_path, git_branch_or_tag_spec or '[repo default branch]', output))
+                return ErrorCommandResult('Robot failure', 'Test file %s/%s missing (at version %s). Original error: %s' % (tempdir, test_path, git_branch_or_tag_spec or '[repo default branch]', output))
 
             now = time.strftime("%b-%d-%Y_%H.%M.%S")
 
