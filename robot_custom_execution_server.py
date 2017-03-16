@@ -286,7 +286,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             except:
                 return ErrorCommandResult('Robot failure', 'Robot did not complete: %s' % string23(output))
 
-            with open(zipname, 'rb') as f:
+            with open('%s/%s' % (tempdir, zipname), 'rb') as f:
                 zipdata = f.read()
 
             shutil.rmtree(tempdir)
