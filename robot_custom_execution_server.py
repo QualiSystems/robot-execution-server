@@ -141,7 +141,7 @@ log_directory = o.get('log_directory', '/var/log')
 log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
 scratch_dir = o.get('scratch_dir', '/tmp')
-default_checkout_version = o.get('git_default_checkout_version', '/tmp')
+default_checkout_version = o.get('git_default_checkout_version', '')
 
 
 class ProcessRunner():
