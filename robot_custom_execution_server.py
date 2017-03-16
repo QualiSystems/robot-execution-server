@@ -343,10 +343,20 @@ def daemon_start():
 
 
 def daemon_stop():
-    logger.info("Stopping, please wait up to 2 minutes...")
-    print ("Stopping, please wait up to 2 minutes...")
+    msgstopping = "Stopping execution server %s, please wait up to 2 minutes..." % server_name
+    msgstopped = "Execution server %s finished shutting down" % server_name
+    logger.info(msgstopping)
+    print (msgstopping)
+    try:
+        subprocess.call(['wall', msgstopping])
+    except:
+        pass
     server.stop()
-    logger.info("Stopped")
-    print ("Stopped")
+    logger.info(msgstopped)
+    print (msgstopped)
+    try:
+        subprocess.call(['wall', msgstopped])
+    except:
+        pass
 
 become_daemon_and_wait(daemon_start, daemon_stop)
