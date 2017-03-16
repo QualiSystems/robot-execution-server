@@ -254,7 +254,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
             if test_arguments and test_arguments != 'None':
                 t += ' ' + test_arguments
-            t += ' %s/%s' % (tempdir, test_path)
+            t += ' -d %s %s/%s' % (tempdir, tempdir, test_path)
 
             try:
                 output, robotretcode = self._process_runner.execute(t, execution_id, env={
