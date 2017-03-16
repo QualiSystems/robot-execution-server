@@ -35,12 +35,22 @@ def input23(msg):
 configfile = os.path.join(os.path.dirname(__file__), 'config.json')
 
 if len(sys.argv) > 1:
+    usage = '''CloudShell Robot execution server automatic self-registration and launch
+Usage: 
+    %s                                      # run with %s
+    %s --config <path to JSON config file>  # run with JSON config file from custom location
+    %s -c <path to JSON config file>        # run with JSON config file from custom location
+The server will run in the background. Send SIGTERM to shut it down.
+''' % (sys.argv[0], configfile, sys.argv[0], sys.argv[0], sys.argv[0])
     for i in range(1, len(sys.argv)):
+        if sys.argv[i] in ['--help', '-h', '-help', '/?', '/help', '-?']:
+            print(usage)
+            sys.exit(1)
         if sys.argv[i] in ['--config', '-c']:
             if i+1 < len(sys.argv):
                 configfile = sys.argv[i+1]
             else:
-                print('Usage: --config <path to config file> or -c <path to config file>')
+                print(usage)
                 sys.exit(1)
 
 try:
@@ -49,7 +59,7 @@ try:
 except:
     print('''%s
 
-Failed to load config.json from the same directory as the main execution server .py file.
+Failed to load JSON config file "%s".
 
 Example config.json:
 {
@@ -85,7 +95,7 @@ Example config.json:
 }
 Note: Remove all // comments before using
 
-    ''' % traceback.format_exc())
+    ''' % (traceback.format_exc(), configfile))
     sys.exit(1)
 
 cloudshell_server_address = o.get('cloudshell_server_address')
