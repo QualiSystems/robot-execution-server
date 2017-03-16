@@ -1,12 +1,12 @@
 {
-  "cloudshell_server_address" : "192.168.2.108",
+  "cloudshell_server_address" : "192.168.41.79",
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
   "cloudshell_username" : "admin",
   "cloudshell_password" : "admin",
   "cloudshell_domain" : "Global",
 
-  "cloudshell_execution_server_name" : "MyCES6",
+  "cloudshell_execution_server_name" : "RobotExecutionServer1",
   "cloudshell_execution_server_description" : "Robot CES in Python",
   "cloudshell_execution_server_type" : "Robot",
   "cloudshell_execution_server_capacity" : "5",
@@ -17,7 +17,6 @@
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://github.com/ericrqs/robot-execution-server",
-  "git_default_checkout_version": "ericr_dev"
+  "git_repo_url": "https://github.com/ericrqs/robot-tests"
 
 }
