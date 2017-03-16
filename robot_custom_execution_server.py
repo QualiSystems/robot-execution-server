@@ -278,7 +278,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, string23(output)))
 
             if 'Data source does not exist' in output:
-                return ErrorCommandResult('Robot failure', 'Test file %s missing (at version %s). Original error: %s' % (test_path, git_branch_or_tag_spec, output))
+                return ErrorCommandResult('Robot failure', 'Test file %s missing (at version %s). Original error: %s' % (test_path, git_branch_or_tag_spec or '[repo default branch]', output))
 
             now = time.strftime("%b-%d-%Y_%H.%M.%S")
 
