@@ -379,8 +379,8 @@ class CustomExecutionServer:
                 'Executing test_path=%s test_arguments=%s execution_id=%s username=%s reservation_id=%s reservation_json=%s' % (
                     test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
             result = self._command_handler.execute_command(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
-        except:
-            result = ErrorCommandResult('Unhandled Python exception', traceback.format_exc())
+        except Exception as ek:
+            result = ErrorCommandResult('Unhandled Python exception', '%s: %s' % (str(ek), traceback.format_exc()))
 
         if not result:
             result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute_command() should return a CommandResult object or throw an exception')

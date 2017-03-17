@@ -279,7 +279,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 })
             except Exception as uue:
                 robotretcode = -5000
-                output = 'Robot crashed: %s: %s' % (uue, traceback.format_exc())
+                output = 'Robot crashed: %s: %s' % (str(uue), traceback.format_exc())
 
             if robotretcode == -6000:
                 return StoppedCommandResult()
