@@ -245,7 +245,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             #     self._logger.info('TestVersion not specified - taking latest from default branch')
             #
             # self._process_runner.execute_throwing('git clone %s %s %s' % (minusb, git_repo_url, tempdir), execution_id+'_git1')
-            self._process_runner.execute_throwing('git clone %s' % (git_repo_url), execution_id+'_git1', directory=tempdir)
+            self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, tempdir), execution_id+'_git1')
 
             if git_branch_or_tag_spec:
                 # self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
