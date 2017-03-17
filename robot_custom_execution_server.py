@@ -241,7 +241,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, tempdir), execution_id+'_git1')
 
             if git_branch_or_tag_spec:
-                self._process_runner.execute_throwing('git checkout %s %s' % (git_branch_or_tag_spec, tempdir), execution_id+'_git2')
+                self._process_runner.execute_throwing('git checkout %s %s' % (git_branch_or_tag_spec, tempdir), execution_id+'_git2', env={
+                    'GIT_DIR': '%s/.git' % tempdir
+                })
             else:
                 self._logger.info('TestVersion not specified - taking latest from default branch')
 
