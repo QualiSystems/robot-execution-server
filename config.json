@@ -17,6 +17,6 @@
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git"
+  "git_repo_url": "https://github.com/ericrqs/robot-tests"
 
 }
