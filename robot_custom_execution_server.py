@@ -238,17 +238,23 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 git_branch_or_tag_spec = default_checkout_version
             # MYBRANCHNAME or tags/MYTAGNAME
 
-            self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, tempdir), execution_id+'_git1')
-
             if git_branch_or_tag_spec:
-                # self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
-                #     'GIT_DIR': '%s/.git' % tempdir
-                # })
-                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2', env={
-                    'GIT_DIR': '%s/.git' % tempdir
-                })
+                minusb = '-b %s' % git_branch_or_tag_spec
             else:
+                minusb = ''
                 self._logger.info('TestVersion not specified - taking latest from default branch')
+
+            self._process_runner.execute_throwing('git clone %s %s %s' % (minusb, git_repo_url, tempdir), execution_id+'_git1')
+
+            # if git_branch_or_tag_spec:
+            #     # self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
+            #     #     'GIT_DIR': '%s/.git' % tempdir
+            #     # })
+            #     self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git2', env={
+            #         'GIT_DIR': '%s/.git' % tempdir
+            #     })
+            # else:
+            #     self._logger.info('TestVersion not specified - taking latest from default branch')
 
             t = 'robot'
             # t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id

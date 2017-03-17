@@ -1,5 +1,5 @@
 {
-  "cloudshell_server_address" : "192.168.41.79",
+  "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
   "cloudshell_snq_port": 9000,
   "cloudshell_username" : "admin",
@@ -17,6 +17,6 @@
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://github.com/ericrqs/robot-tests"
+  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git"
 
 }
