@@ -155,15 +155,15 @@ class ProcessRunner():
         self._stopping_processes = []
         self._running_on_windows = platform.system() == 'Windows'
 
-    def execute_throwing(self, command, identifier, env=None):
-        o, c = self.execute(command, identifier, env=env)
+    def execute_throwing(self, command, identifier, env=None, directory=None):
+        o, c = self.execute(command, identifier, env=env, directory=directory)
         if c:
             s = 'Error: %d: %s failed: %s' % (c, command, o)
             self._logger.error(s)
             raise Exception(s)
         return o, c
 
-    def execute(self, command, identifier, env=None):
+    def execute(self, command, identifier, env=None, directory=None):
         env = env or {}
         if True:
             pcommand = command
@@ -175,9 +175,9 @@ class ProcessRunner():
 
             self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
         if self._running_on_windows:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env)
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env, cwd=directory)
         else:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid, env=env)
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid, env=env, cwd=directory)
         self._current_processes[identifier] = process
         output = ''
         for line in iter(process.stdout.readline, b''):
@@ -245,15 +245,16 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             #     self._logger.info('TestVersion not specified - taking latest from default branch')
             #
             # self._process_runner.execute_throwing('git clone %s %s %s' % (minusb, git_repo_url, tempdir), execution_id+'_git1')
-            self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, tempdir), execution_id+'_git1')
+            self._process_runner.execute_throwing('git clone %s' % (git_repo_url), execution_id+'_git1', directory=tempdir)
 
             if git_branch_or_tag_spec:
-                self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
-                    'GIT_DIR': '%s/.git' % tempdir
-                })
-                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git3', env={
-                    'GIT_DIR': '%s/.git' % tempdir
-                })
+                # self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
+                #     'GIT_DIR': '%s/.git' % tempdir
+                # })
+                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git3', directory=tempdir)
+                # env={
+                #     'GIT_DIR': '%s/.git' % tempdir
+                # })
             else:
                 self._logger.info('TestVersion not specified - taking latest from default branch')
 
