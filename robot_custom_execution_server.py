@@ -175,7 +175,7 @@ class ProcessRunner():
 
             self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
         if ' ' in command:
-            executable, args = command.split(' ', 2)
+            executable, args = command.split(' ', 1)
         else:
             executable = command
             args = None
