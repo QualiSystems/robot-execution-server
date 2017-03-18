@@ -174,10 +174,15 @@ class ProcessRunner():
                 penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
 
             self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
-        if self._running_on_windows:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env, cwd=directory)
+        if ' ' in command:
+            executable, args = command.split(' ', 2)
         else:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid, env=env, cwd=directory)
+            executable = command
+            args = None
+        if self._running_on_windows:
+            process = subprocess.Popen(args, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env, cwd=directory)
+        else:
+            process = subprocess.Popen(args, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, preexec_fn=os.setsid, env=env, cwd=directory)
         self._current_processes[identifier] = process
         output = ''
         for line in iter(process.stdout.readline, b''):
