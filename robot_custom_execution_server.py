@@ -293,7 +293,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             now = time.strftime("%b-%d-%Y_%H.%M.%S")
 
-            zipname = '%s_%s.zip' % (test_path, now)
+            zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
             try:
                 zipoutput, _ = self._process_runner.execute_throwing('zip -j %s/%s %s/output.xml %s/log.html %s/report.html' % (tempdir, zipname, tempdir, tempdir, tempdir), execution_id+'_zip')
             except:
