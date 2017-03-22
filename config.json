@@ -9,17 +9,18 @@
   "cloudshell_execution_server_name" : "RobotExecutionServer1",
   "cloudshell_execution_server_description" : "Robot CES in Python",
   "cloudshell_execution_server_type" : "Robot",
-  "cloudshell_execution_server_capacity" : "5",
+  "cloudshell_execution_server_capacity" : 5,
 
   "log_directory": "/var/log",
   "log_level": "DEBUG",
   "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
-  "scratch_directory": "/tmp",
+  "unique_output_directory": "/tmp/outdir/%R/%N_%V_%T",
+  "delete_output_after_run": false,
+  "archive_output_xml_to": "/tmp/outdir/%R/%N_%V_%T.xml",
+  "postprocessing_command": "/root/postprocess.sh /tmp/outdir/%R/%N_%V_%T.xml",
 
-  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git",
+  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git"
 
-  "copy_output_xml_to": "/tmp/outdir/%R/%N_%V_%T.xml",
-  "postprocessing_command": "/root/postprocess.sh /tmp/outdir/%R/%N_%V_%T.xml"
 
 }

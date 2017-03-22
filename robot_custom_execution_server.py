@@ -6,7 +6,6 @@ import subprocess
 import sys
 import time
 import os
-import tempfile
 import logging
 import shutil
 import re
@@ -58,15 +57,20 @@ jsonexample = '''Example config.json:
   // CRITICAL | ERROR | WARNING | INFO | DEBUG
   "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
-  "scratch_directory": "/tmp",
+  "unique_output_directory": "/mnt/share1/robot_output/%R/%N_%V_%T",
+  "delete_output_after_run": false,
+  "archive_output_xml_to": "/mnt/share1/robot_logs/%R/%N_%V_%T.xml",
+  "postprocessing_command": "/mnt/share1/scripts/postprocess.sh /mnt/share1/robot_logs/%R/%N_%V_%T.xml",
+
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj",
-  "git_default_checkout_version": "master",
-
-  "copy_output_xml_to": "/mnt/share1/robot_logs/%R/%N_%V_%T.xml",
-  "postprocessing_command": "/mnt/share1/scripts/postprocess.sh /mnt/share1/robot_logs/%R/%N_%V_%T.xml"
-
+  "git_default_checkout_version": "master"
 }
+// %R = reservation id
+// %V = version (tag, branch, or commit id)
+// %N = test name
+// %T = timestamp YYYY-MM-DD_hh.mm.ss
+
 Note: Remove all // comments before using
 '''
 configfile = os.path.join(os.path.dirname(__file__), 'config.json')
@@ -148,10 +152,11 @@ cloudshell_domain = o.get('cloudshell_domain', 'Global')
 log_directory = o.get('log_directory', '/var/log')
 log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
-scratch_dir = o.get('scratch_dir', '/tmp')
+unique_output_directory = o.get('unique_output_directory', '/tmp')
+delete_output = o.get('delete_output_after_run', False)
+archive_output_xml_to = o.get('archive_output_xml_to', '')
+postprocessing_command = o.get('postprocessing_command', '')
 default_checkout_version = o.get('git_default_checkout_version', '')
-cxmlt = o.get('copy_output_xml_to', '')
-ppc = o.get('postprocessing_command', '')
 
 
 class ProcessRunner():
@@ -218,7 +223,17 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
     def execute_command(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         try:
-            tempdir = tempfile.mkdtemp(dir=scratch_dir)
+            now = time.strftime("%Y-%m-%d_%H.%M.%S")
+
+            def cdrip(fn):
+                fn = fn.replace('%R', reservation_id)
+                fn = fn.replace('%N', test_path.replace(' ', '_'))
+                fn = fn.replace('%T', now)
+                fn = fn.replace('%V', git_branch_or_tag_spec)
+                return fn
+
+            outdir = cdrip(unique_output_directory)
+            os.makedirs(outdir, exist_ok=True)
 
             resinfo = json.loads(reservation_json) if reservation_json and reservation_json != 'None' else None
 
@@ -239,7 +254,6 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             if git_branch_or_tag_spec == 'None':
                 git_branch_or_tag_spec = None
 
-
             if not git_branch_or_tag_spec:
                 git_branch_or_tag_spec = default_checkout_version
             # MYBRANCHNAME or tags/MYTAGNAME
@@ -250,16 +264,16 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             #     minusb = ''
             #     self._logger.info('TestVersion not specified - taking latest from default branch')
             #
-            # self._process_runner.execute_throwing('git clone %s %s %s' % (minusb, git_repo_url, tempdir), execution_id+'_git1')
-            self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, tempdir), execution_id+'_git1')
+            # self._process_runner.execute_throwing('git clone %s %s %s' % (minusb, git_repo_url, outdir), execution_id+'_git1')
+            self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, outdir), execution_id+'_git1')
 
             if git_branch_or_tag_spec:
                 # self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
-                #     'GIT_DIR': '%s/.git' % tempdir
+                #     'GIT_DIR': '%s/.git' % outdir
                 # })
-                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git3', directory=tempdir)
+                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git3', directory=outdir)
                 # env={
-                #     'GIT_DIR': '%s/.git' % tempdir
+                #     'GIT_DIR': '%s/.git' % outdir
                 # })
             else:
                 self._logger.info('TestVersion not specified - taking latest from default branch')
@@ -273,7 +287,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
             if test_arguments and test_arguments != 'None':
                 t += ' ' + test_arguments
-            t += ' -d %s %s' % (tempdir, test_path)
+            t += ' -d %s %s' % (outdir, test_path)
 
             try:
                 output, robotretcode = self._process_runner.execute(t, execution_id, env={
@@ -295,44 +309,31 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, string23(output)))
 
             if 'Data source does not exist' in output:
-                return ErrorCommandResult('Robot failure', 'Test file %s/%s missing (at version %s). Original error: %s' % (tempdir, test_path, git_branch_or_tag_spec or '[repo default branch]', output))
+                return ErrorCommandResult('Robot failure', 'Test file %s/%s missing (at version %s). Original error: %s' % (outdir, test_path, git_branch_or_tag_spec or '[repo default branch]', output))
 
-            now = time.strftime("%Y-%m-%d_%H.%M.%S")
-
-            if cxmlt:
-                self._logger.info('Begin CXMLT')
-                s = cxmlt
-                self._logger.info('CXMLT 2 %s' % s)
-                s = s.replace('%R', reservation_id)
-                s = s.replace('%N', test_path.replace(' ', '_'))
-                s = s.replace('%T', now)
-                s = s.replace('%V', git_branch_or_tag_spec)
-                self._logger.info('CXMLT 3 %s' % s)
-                os.makedirs(os.path.dirname(s), exist_ok=True)
-                self._logger.info('Copying %s/output.xml to %s' % (tempdir, s))
-                shutil.copyfile('%s/output.xml' % tempdir, s)
+            if archive_output_xml_to:
+                s = cdrip(archive_output_xml_to)
+                os.makedirs(os.path.dirname(archive_output_xml_to), exist_ok=True)
+                self._logger.info('Copying %s/output.xml to %s' % (outdir, s))
+                shutil.copyfile('%s/output.xml' % outdir, s)
 
             zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
             try:
-                zipoutput, _ = self._process_runner.execute_throwing('zip -j %s/%s %s/output.xml %s/log.html %s/report.html' % (tempdir, zipname, tempdir, tempdir, tempdir), execution_id+'_zip')
+                zipoutput, _ = self._process_runner.execute_throwing('zip -j %s/%s %s/output.xml %s/log.html %s/report.html' % (outdir, zipname, outdir, outdir, outdir), execution_id+'_zip')
             except:
                 return ErrorCommandResult('Robot failure', 'Robot did not complete: %s' % string23(output))
 
-            with open('%s/%s' % (tempdir, zipname), 'rb') as f:
+            with open('%s/%s' % (outdir, zipname), 'rb') as f:
                 zipdata = f.read()
 
-            shutil.rmtree(tempdir)
+            if delete_output:
+                self._logger.info('Deleting %s' % outdir)
+                shutil.rmtree(outdir)
 
-            if ppc:
-                s = ppc
-                s = s.replace('%R', reservation_id)
-                s = s.replace('%N', test_path.replace(' ', '_'))
-                s = s.replace('%T', now)
-                s = s.replace('%V', git_branch_or_tag_spec)
-                ppout, ppret = self._process_runner.execute(s, execution_id+'_postprocess')
+            if postprocessing_command:
+                ppout, ppret = self._process_runner.execute(cdrip(postprocessing_command), execution_id + '_postprocess')
                 if ppret:
                     return ErrorCommandResult('Postprocessing failure', string23(ppout))
-
 
             if robotretcode == 0:
                 return PassedCommandResult(zipname, zipdata, 'application/zip')
