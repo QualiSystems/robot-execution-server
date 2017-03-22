@@ -139,6 +139,7 @@ for k in list(o.keys()):
     if '<EXECUTION_SERVER_NAME>' in v:
         o[k] = o[k].replace('<EXECUTION_SERVER_NAME>', server_name)
 
+
 server_description = o.get('cloudshell_execution_server_description', '')
 server_capacity = int(o.get('cloudshell_execution_server_capacity', 5))
 cloudshell_snq_port = int(o.get('cloudshell_snq_port', 9000))
@@ -298,6 +299,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             now = time.strftime("%Y-%m-%d_%H.%M.%S")
 
+            global copy_xml_to
             if copy_xml_to:
                 copy_xml_to = copy_xml_to.replace('%R', reservation_id)
                 copy_xml_to = copy_xml_to.replace('%N', test_path.replace(' ', '_'))
@@ -322,6 +324,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             shutil.rmtree(tempdir)
 
+            global postprocessing_command
             if postprocessing_command:
                 postprocessing_command = postprocessing_command.replace('%R', reservation_id)
                 postprocessing_command = postprocessing_command.replace('%N', test_path.replace(' ', '_'))
