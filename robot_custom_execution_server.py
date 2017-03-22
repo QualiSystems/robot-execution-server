@@ -224,19 +224,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         try:
             now = time.strftime("%Y-%m-%d_%H.%M.%S")
-
-            def cdrip(fn):
-                fn = fn.replace('%R', reservation_id)
-                fn = fn.replace('%N', test_path.replace(' ', '_'))
-                fn = fn.replace('%T', now)
-                fn = fn.replace('%V', git_branch_or_tag_spec)
-                return fn
-
-            outdir = cdrip(unique_output_directory)
-            os.makedirs(outdir, exist_ok=True)
-
             resinfo = json.loads(reservation_json) if reservation_json and reservation_json != 'None' else None
-
             git_branch_or_tag_spec = None
 
             if test_arguments:
@@ -256,6 +244,17 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             if not git_branch_or_tag_spec:
                 git_branch_or_tag_spec = default_checkout_version
+
+            def cdrip(fn):
+                fn = fn.replace('%R', reservation_id)
+                fn = fn.replace('%N', test_path.replace(' ', '_'))
+                fn = fn.replace('%T', now)
+                fn = fn.replace('%V', git_branch_or_tag_spec)
+                return fn
+
+            outdir = cdrip(unique_output_directory)
+            os.makedirs(outdir, exist_ok=True)
+
             # MYBRANCHNAME or tags/MYTAGNAME
 
             # if git_branch_or_tag_spec:
