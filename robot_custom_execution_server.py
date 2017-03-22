@@ -301,23 +301,26 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             if cxmlt:
                 self._logger.info('Begin CXMLT')
-                s = cxmlt
-                s = s.replace('%R', reservation_id)
-                s = s.replace('%N', test_path.replace(' ', '_'))
-                s = s.replace('%T', now)
-                s = s.replace('%V', git_branch_or_tag_spec)
+                try:
+                    s = cxmlt
+                    s = s.replace('%R', reservation_id)
+                    s = s.replace('%N', test_path.replace(' ', '_'))
+                    s = s.replace('%T', now)
+                    s = s.replace('%V', git_branch_or_tag_spec)
 
-                d = s
-                while True:
-                    d = os.path.dirname(d)
-                    if not d:
-                        break
-                    try:
-                        os.mkdir(d)
-                    except:
-                        pass
-                self._logger.info('Copying %s/output.xml to %s' % (tempdir, s))
-                shutil.copyfile('%s/output.xml' % tempdir, s)
+                    d = s
+                    while True:
+                        d = os.path.dirname(d)
+                        if not d:
+                            break
+                        try:
+                            os.mkdir(d)
+                        except:
+                            pass
+                    self._logger.info('Copying %s/output.xml to %s' % (tempdir, s))
+                    shutil.copyfile('%s/output.xml' % tempdir, s)
+                except Exception as ve:
+                    self._logger.error('Error copying output file to archive: %s' % str(ve))
 
             zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
             try:
