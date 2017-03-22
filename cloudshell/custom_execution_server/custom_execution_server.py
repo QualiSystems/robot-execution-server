@@ -233,6 +233,7 @@ class CustomExecutionServer:
         self._command_handler = command_handler
 
         self._execution_ids = set()
+        self._stopped_ids = set()
 
         self._running = False
         self._threads = []
@@ -363,7 +364,14 @@ class CustomExecutionServer:
                 th.daemon = True
                 th.start()
             elif command_type == 'stopExecution':
+                self._stopped_ids.add(execution_id)
                 self._command_handler.stop_command(execution_id, self._logger)
+                self._request('put', '/API/Execution/FinishedExecution',
+                              data=json.dumps({
+                                  'Name': self._server_name,
+                                  'ExecutionId': execution_id,
+                                  'Result': 'Stopped',
+                              }))
             elif command_type == 'updateFiles':
                 # Must send this response or the execution server will be disabled
                 self._request('post', '/API/Execution/UpdateFilesEnded',
@@ -380,7 +388,11 @@ class CustomExecutionServer:
                     test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
             result = self._command_handler.execute_command(test_path, test_arguments, execution_id, username, reservation_id, reservation_json, self._logger)
         except Exception as ek:
-            result = ErrorCommandResult('Unhandled Python exception', '%s: %s' % (str(ek), traceback.format_exc()))
+            if execution_id in self._stopped_ids:
+                self._stopped_ids.remove(execution_id)
+                return
+            else:
+                result = ErrorCommandResult('Unhandled Python exception', '%s: %s' % (str(ek), traceback.format_exc()))
 
         if not result:
             result = ErrorCommandResult('Internal error', 'CustomExecutionServerCommandHandler.execute_command() should return a CommandResult object or throw an exception')
