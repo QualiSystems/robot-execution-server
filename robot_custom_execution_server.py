@@ -312,7 +312,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             if archive_output_xml_to:
                 s = cdrip(archive_output_xml_to)
-                os.makedirs(os.path.dirname(archive_output_xml_to), exist_ok=True)
+                os.makedirs(os.path.dirname(s), exist_ok=True)
                 self._logger.info('Copying %s/output.xml to %s' % (outdir, s))
                 shutil.copyfile('%s/output.xml' % outdir, s)
 
