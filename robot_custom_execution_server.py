@@ -150,8 +150,8 @@ log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
 scratch_dir = o.get('scratch_dir', '/tmp')
 default_checkout_version = o.get('git_default_checkout_version', '')
-copy_xml_to = o.get('copy_output_xml_to', '')
-postprocessing_command = o.get('postprocessing_command', '')
+cxmlt = o.get('copy_output_xml_to', '')
+ppc = o.get('postprocessing_command', '')
 
 
 class ProcessRunner():
@@ -299,14 +299,14 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             now = time.strftime("%Y-%m-%d_%H.%M.%S")
 
-            global copy_xml_to
-            if copy_xml_to:
-                copy_xml_to = copy_xml_to.replace('%R', reservation_id)
-                copy_xml_to = copy_xml_to.replace('%N', test_path.replace(' ', '_'))
-                copy_xml_to = copy_xml_to.replace('%T', now)
-                copy_xml_to = copy_xml_to.replace('%V', git_branch_or_tag_spec)
+            if cxmlt:
+                s = cxmlt
+                s = s.replace('%R', reservation_id)
+                s = s.replace('%N', test_path.replace(' ', '_'))
+                s = s.replace('%T', now)
+                s = s.replace('%V', git_branch_or_tag_spec)
 
-                d = copy_xml_to
+                d = s
                 while True:
                     d = os.path.dirname(d)
                     if not d:
@@ -329,16 +329,15 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             shutil.rmtree(tempdir)
 
-            global postprocessing_command
-            if postprocessing_command:
-                postprocessing_command = postprocessing_command.replace('%R', reservation_id)
-                postprocessing_command = postprocessing_command.replace('%N', test_path.replace(' ', '_'))
-                postprocessing_command = postprocessing_command.replace('%T', now)
-                postprocessing_command = postprocessing_command.replace('%V', git_branch_or_tag_spec)
-
-            ppout, ppret = self._process_runner.execute(postprocessing_command, execution_id+'_postprocess')
-            if ppret:
-                return ErrorCommandResult('Postprocessing failure', string23(ppout))
+            if ppc:
+                s = ppc
+                s = s.replace('%R', reservation_id)
+                s = s.replace('%N', test_path.replace(' ', '_'))
+                s = s.replace('%T', now)
+                s = s.replace('%V', git_branch_or_tag_spec)
+                ppout, ppret = self._process_runner.execute(s, execution_id+'_postprocess')
+                if ppret:
+                    return ErrorCommandResult('Postprocessing failure', string23(ppout))
 
 
             if robotretcode == 0:
