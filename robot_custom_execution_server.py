@@ -315,7 +315,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                         os.mkdir(d)
                     except:
                         pass
-                shutil.copyfile('%s/output.xml', copy_xml_to)
+                shutil.copyfile('%s/output.xml' % tempdir, copy_xml_to)
 
             zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
             try:
