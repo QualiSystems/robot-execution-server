@@ -17,6 +17,9 @@
 
   "scratch_directory": "/tmp",
 
-  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git"
+  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git",
+
+  "copy_output_xml_to": "/tmp/outdir/%R/%N_%V_%T.xml",
+  "postprocessing_command": "/root/postprocess.sh /tmp/outdir/%R/%N_%V_%T.xml"
 
 }

@@ -61,7 +61,10 @@ jsonexample = '''Example config.json:
   "scratch_directory": "/tmp",
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj",
-  "git_default_checkout_version": "master"
+  "git_default_checkout_version": "master",
+
+  "copy_output_xml_to": "/mnt/share1/robot_logs/%R/%N_%V_%T.xml",
+  "postprocessing_command": "/mnt/share1/scripts/postprocess.sh /mnt/share1/robot_logs/%R/%N_%V_%T.xml"
 
 }
 Note: Remove all // comments before using
@@ -146,6 +149,8 @@ log_level = o.get('log_level', 'INFO')
 log_filename = o.get('log_filename', server_name + '.log')
 scratch_dir = o.get('scratch_dir', '/tmp')
 default_checkout_version = o.get('git_default_checkout_version', '')
+copy_xml_to = o.get('copy_output_xml_to', '')
+postprocessing_command = o.get('postprocessing_command', '')
 
 
 class ProcessRunner():
@@ -291,7 +296,20 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             if 'Data source does not exist' in output:
                 return ErrorCommandResult('Robot failure', 'Test file %s/%s missing (at version %s). Original error: %s' % (tempdir, test_path, git_branch_or_tag_spec or '[repo default branch]', output))
 
-            now = time.strftime("%b-%d-%Y_%H.%M.%S")
+            now = time.strftime("%Y-%m-%d_%H.%M.%S")
+
+            if copy_xml_to:
+                copy_xml_to = copy_xml_to.replace('%R', reservation_id)
+                copy_xml_to = copy_xml_to.replace('%N', test_path.replace(' ', '_'))
+                copy_xml_to = copy_xml_to.replace('%T', now)
+                copy_xml_to = copy_xml_to.replace('%V', git_branch_or_tag_spec)
+
+                while True:
+                    d = os.path.dirname(copy_xml_to)
+                    if not d:
+                        break
+                    os.mkdir(d)
+                shutil.copyfile('%s/output.xml', copy_xml_to)
 
             zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
             try:
@@ -303,6 +321,17 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 zipdata = f.read()
 
             shutil.rmtree(tempdir)
+
+            if postprocessing_command:
+                postprocessing_command = postprocessing_command.replace('%R', reservation_id)
+                postprocessing_command = postprocessing_command.replace('%N', test_path.replace(' ', '_'))
+                postprocessing_command = postprocessing_command.replace('%T', now)
+                postprocessing_command = postprocessing_command.replace('%V', git_branch_or_tag_spec)
+
+            ppout, ppret = self._process_runner.execute(postprocessing_command, execution_id+'_postprocess')
+            if ppret:
+                return ErrorCommandResult('Postprocessing failure', string23(ppout))
+
 
             if robotretcode == 0:
                 return PassedCommandResult(zipname, zipdata, 'application/zip')
