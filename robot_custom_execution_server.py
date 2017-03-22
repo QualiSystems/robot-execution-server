@@ -319,8 +319,8 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                             pass
                     self._logger.info('Copying %s/output.xml to %s' % (tempdir, s))
                     shutil.copyfile('%s/output.xml' % tempdir, s)
-                except Exception as ve:
-                    self._logger.error('Error copying output file to archive: %s' % str(ve))
+                except:
+                    self._logger.error('Error copying output file to archive')
 
             zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
             try:
