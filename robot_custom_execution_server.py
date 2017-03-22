@@ -309,16 +309,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                     s = s.replace('%T', now)
                     s = s.replace('%V', git_branch_or_tag_spec)
                     self._logger.info('CXMLT 3 %s' % s)
-
-                    d = s
-                    while True:
-                        d = os.path.dirname(d)
-                        if not d:
-                            break
-                        try:
-                            os.mkdir(d)
-                        except:
-                            pass
+                    os.makedirs(os.path.dirname(s), exist_ok=True)
                     self._logger.info('Copying %s/output.xml to %s' % (tempdir, s))
                     shutil.copyfile('%s/output.xml' % tempdir, s)
                 except:
