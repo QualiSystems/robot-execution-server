@@ -306,11 +306,15 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 copy_xml_to = copy_xml_to.replace('%T', now)
                 copy_xml_to = copy_xml_to.replace('%V', git_branch_or_tag_spec)
 
+                d = copy_xml_to
                 while True:
-                    d = os.path.dirname(copy_xml_to)
+                    d = os.path.dirname(d)
                     if not d:
                         break
-                    os.mkdir(d)
+                    try:
+                        os.mkdir(d)
+                    except:
+                        pass
                 shutil.copyfile('%s/output.xml', copy_xml_to)
 
             zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
