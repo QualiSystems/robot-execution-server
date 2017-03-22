@@ -300,6 +300,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             now = time.strftime("%Y-%m-%d_%H.%M.%S")
 
             if cxmlt:
+                self._logger.info('Begin CXMLT')
                 s = cxmlt
                 s = s.replace('%R', reservation_id)
                 s = s.replace('%N', test_path.replace(' ', '_'))
