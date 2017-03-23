@@ -297,7 +297,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 tt += test_arguments.split(' ')
             tt.append('-d')
             tt.append(outdir)
-            tt.append(test_path)
+            tt += test_path.split(' ')
 
             try:
                 output, robotretcode = self._process_runner.execute(tt, execution_id, env={
