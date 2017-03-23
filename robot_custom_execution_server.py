@@ -166,29 +166,32 @@ class ProcessRunner():
         self._stopping_processes = []
         self._running_on_windows = platform.system() == 'Windows'
 
-    def execute_throwing(self, command, identifier, env=None, directory=None):
-        o, c = self.execute(command, identifier, env=env, directory=directory)
+    def execute_throwing(self, command_list, identifier, env=None, directory=None):
+        o, c = self.execute(command_list, identifier, env=env, directory=directory)
         if c:
-            s = 'Error: %d: %s failed: %s' % (c, command, o)
+            s = 'Error: %d: %s failed: %s' % (c, command_list, o)
             self._logger.error(s)
             raise Exception(s)
         return o, c
 
-    def execute(self, command, identifier, env=None, directory=None):
+    def execute(self, command_list, identifier, env=None, directory=None):
         env = env or {}
         if True:
-            pcommand = command
-            pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
-            pcommand = re.sub(r"CLOUDSHELL_PASSWORD:[^']*", 'CLOUDSHELL_PASSWORD:(password hidden)', pcommand)
+            pcommands = []
+            for command in command_list:
+                pcommand = command
+                pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
+                pcommand = re.sub(r"CLOUDSHELL_PASSWORD:[^']*", 'CLOUDSHELL_PASSWORD:(password hidden)', pcommand)
+                pcommands.append(pcommand)
             penv = dict(env)
             if 'CLOUDSHELL_PASSWORD' in penv:
                 penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
 
-            self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommand, penv))
+            self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommands, penv))
         if self._running_on_windows:
-            process = subprocess.Popen(command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env, cwd=directory)
+            process = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env, cwd=directory)
         else:
-            process = subprocess.Popen(command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, preexec_fn=os.setsid, env=env, cwd=directory)
+            process = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, preexec_fn=os.setsid, env=env, cwd=directory)
         self._current_processes[identifier] = process
         output = ''
         for line in iter(process.stdout.readline, b''):
@@ -221,6 +224,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         self._process_runner = ProcessRunner(self._logger)
 
     def execute_command(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
+        BADCHAR = r'[^-@%.,_a-zA-Z0-9 ]'
+        test_path = re.sub(BADCHAR, '_', test_path)
+
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
         try:
             now = time.strftime("%Y-%m-%d_%H.%M.%S")
@@ -228,7 +234,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             git_branch_or_tag_spec = None
 
             if test_arguments:
-                versionre = r'TestVersion=([-_./0-9a-zA-Z]*)'
+                versionre = r'TestVersion=([-@%_.,0-9a-zA-Z]*)'
                 m = re.search(versionre, test_arguments)
                 if m:
                     git_branch_or_tag_spec = m.groups()[0]
@@ -245,9 +251,12 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             if not git_branch_or_tag_spec:
                 git_branch_or_tag_spec = default_checkout_version
 
+            if git_branch_or_tag_spec:
+                git_branch_or_tag_spec = re.sub(BADCHAR, '_', git_branch_or_tag_spec)
+
             def cdrip(fn):
                 fn = fn.replace('%R', reservation_id)
-                fn = fn.replace('%N', test_path.replace(' ', '_'))
+                fn = fn.replace('%N', test_path)
                 fn = fn.replace('%T', now)
                 fn = fn.replace('%V', git_branch_or_tag_spec)
                 return fn
@@ -264,20 +273,20 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             #     self._logger.info('TestVersion not specified - taking latest from default branch')
             #
             # self._process_runner.execute_throwing('git clone %s %s %s' % (minusb, git_repo_url, outdir), execution_id+'_git1')
-            self._process_runner.execute_throwing('git clone %s %s' % (git_repo_url, outdir), execution_id+'_git1')
+            self._process_runner.execute_throwing(['git', 'clone', git_repo_url, outdir], execution_id+'_git1')
 
             if git_branch_or_tag_spec:
                 # self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
                 #     'GIT_DIR': '%s/.git' % outdir
                 # })
-                self._process_runner.execute_throwing('git checkout %s' % git_branch_or_tag_spec, execution_id+'_git3', directory=outdir)
+                self._process_runner.execute_throwing(['git', 'checkout', git_branch_or_tag_spec], execution_id+'_git3', directory=outdir)
                 # env={
                 #     'GIT_DIR': '%s/.git' % outdir
                 # })
             else:
                 self._logger.info('TestVersion not specified - taking latest from default branch')
 
-            t = 'robot'
+            tt = ['robot']
             # t += ' --variable CLOUDSHELL_RESERVATION_ID:%s' % reservation_id
             # t += ' --variable CLOUDSHELL_SERVER_ADDRESS:%s' % cloudshell_server_address
             # t += ' --variable CLOUDSHELL_PORT:%d' % cloudshell_port
@@ -285,11 +294,13 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             # t += " --variable 'CLOUDSHELL_PASSWORD:%s'" % cloudshell_password
             # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
             if test_arguments and test_arguments != 'None':
-                t += ' ' + test_arguments
-            t += ' -d %s %s' % (outdir, test_path)
+                tt += test_arguments.split(' ')
+            tt.append('-d')
+            tt.append(outdir)
+            tt.append(test_path)
 
             try:
-                output, robotretcode = self._process_runner.execute(t, execution_id, env={
+                output, robotretcode = self._process_runner.execute(tt, execution_id, env={
                     'CLOUDSHELL_RESERVATION_ID': reservation_id or 'None',
                     'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address or 'None',
                     'CLOUDSHELL_SERVER_PORT': str(cloudshell_port) or 'None',
@@ -318,7 +329,13 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
 
             zipname = '%s_%s.zip' % (test_path.replace(' ', '_'), now)
             try:
-                zipoutput, _ = self._process_runner.execute_throwing('zip -j %s/%s %s/output.xml %s/log.html %s/report.html' % (outdir, zipname, outdir, outdir, outdir), execution_id+'_zip')
+                zipoutput, _ = self._process_runner.execute_throwing([
+                    'zip', '-j',
+                    '%s/%s' % (outdir, zipname),
+                    '%s/output.xml' % outdir,
+                    '%s/log.html' % outdir,
+                    '%s/report.html' % outdir
+                ], execution_id+'_zip')
             except:
                 return ErrorCommandResult('Robot failure', 'Robot did not complete: %s' % string23(output))
 
@@ -330,7 +347,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 shutil.rmtree(outdir)
 
             if postprocessing_command:
-                ppout, ppret = self._process_runner.execute(cdrip(postprocessing_command), execution_id + '_postprocess')
+                ppout, ppret = self._process_runner.execute(cdrip(postprocessing_command).split(' '), execution_id + '_postprocess')
                 if ppret:
                     return ErrorCommandResult('Postprocessing failure', string23(ppout))
 
