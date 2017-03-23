@@ -316,7 +316,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             if robotretcode == -6000:
                 return StoppedCommandResult()
 
-            self._logger.debug('Result of %s: %d: %s' % (t, robotretcode, string23(output)))
+            self._logger.debug('Result of %s: %d: %s' % (tt, robotretcode, string23(output)))
 
             if 'Data source does not exist' in output:
                 return ErrorCommandResult('Robot failure', 'Test file %s/%s missing (at version %s). Original error: %s' % (outdir, test_path, git_branch_or_tag_spec or '[repo default branch]', output))
