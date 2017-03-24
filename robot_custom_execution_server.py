@@ -231,7 +231,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         try:
             now = time.strftime("%Y-%m-%d_%H.%M.%S")
             resinfo = json.loads(reservation_json) if reservation_json and reservation_json != 'None' else None
-            git_branch_or_tag_spec = None
+            git_branch_or_tag_spec = ''
 
             if test_arguments:
                 versionre = r'TestVersion=([-@%_.,0-9a-zA-Z]*)'
@@ -246,19 +246,35 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                         if v['Name'] == 'TestVersion':
                             git_branch_or_tag_spec = v['Value']
             if git_branch_or_tag_spec == 'None':
-                git_branch_or_tag_spec = None
+                git_branch_or_tag_spec = ''
 
             if not git_branch_or_tag_spec:
                 git_branch_or_tag_spec = default_checkout_version
 
             if git_branch_or_tag_spec:
-                git_branch_or_tag_spec = re.sub(BADCHAR, '_', git_branch_or_tag_spec)
+                if git_branch_or_tag_spec.startswith('.') or \
+                                '/.' in git_branch_or_tag_spec or \
+                                '..' in git_branch_or_tag_spec or \
+                        git_branch_or_tag_spec.endswith('/') or \
+                        git_branch_or_tag_spec.endswith('.lock') or \
+                                '~' in git_branch_or_tag_spec or \
+                                '^' in git_branch_or_tag_spec or \
+                                ':' in git_branch_or_tag_spec or \
+                                '\\' in git_branch_or_tag_spec or \
+                                ' ' in git_branch_or_tag_spec or \
+                                '\t' in git_branch_or_tag_spec or \
+                                '\r' in git_branch_or_tag_spec or \
+                                '\n' in git_branch_or_tag_spec:
+                    raise Exception('Illegal branch or tag name %s' % git_branch_or_tag_spec)
 
             def cdrip(fn):
-                fn = fn.replace('%R', reservation_id)
-                fn = fn.replace('%N', test_path)
                 fn = fn.replace('%T', now)
-                fn = fn.replace('%V', git_branch_or_tag_spec)
+                if reservation_id:
+                    fn = fn.replace('%R', reservation_id)
+                if test_path:
+                    fn = fn.replace('%N', test_path)
+                if git_branch_or_tag_spec:
+                    fn = fn.replace('%V', git_branch_or_tag_spec)
                 return fn
 
             outdir = cdrip(unique_output_directory)
