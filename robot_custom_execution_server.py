@@ -251,6 +251,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             if not git_branch_or_tag_spec:
                 git_branch_or_tag_spec = default_checkout_version
 
+            if not git_branch_or_tag_spec:
+                git_branch_or_tag_spec = 'DEFAULT'
+
             if git_branch_or_tag_spec:
                 if git_branch_or_tag_spec.startswith('.') or \
                                 '/.' in git_branch_or_tag_spec or \
@@ -291,7 +294,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             # self._process_runner.execute_throwing('git clone %s %s %s' % (minusb, git_repo_url, outdir), execution_id+'_git1')
             self._process_runner.execute_throwing(['git', 'clone', git_repo_url, outdir], execution_id+'_git1')
 
-            if git_branch_or_tag_spec:
+            if git_branch_or_tag_spec != 'DEFAULT':
                 # self._process_runner.execute_throwing('git reset --hard', execution_id+'_git2', env={
                 #     'GIT_DIR': '%s/.git' % outdir
                 # })
@@ -311,8 +314,8 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             # t += ' --variable CLOUDSHELL_DOMAIN:%s' % cloudshell_domain
             if test_arguments and test_arguments != 'None':
                 tt += test_arguments.split(' ')
-            tt.append('-d')
-            tt.append(outdir)
+            # tt.append('-d')
+            # tt.append(outdir)
             tt += test_path.split(' ')
 
             try:
@@ -324,7 +327,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                     'CLOUDSHELL_PASSWORD': cloudshell_password or 'None',
                     'CLOUDSHELL_DOMAIN': cloudshell_domain or 'None',
                     'CLOUDSHELL_RESERVATION_INFO': reservation_json or 'None',
-                })
+                }, directory=outdir)
             except Exception as uue:
                 robotretcode = -5000
                 output = 'Robot crashed: %s: %s' % (str(uue), traceback.format_exc())
