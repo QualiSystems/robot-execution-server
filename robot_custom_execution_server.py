@@ -234,7 +234,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             git_branch_or_tag_spec = ''
 
             if test_arguments:
-                versionre = r'TestVersion=([-@%_.,0-9a-zA-Z]*)'
+                versionre = r'TestVersion=([-@%_/.,0-9a-zA-Z]*)'
                 m = re.search(versionre, test_arguments)
                 if m:
                     git_branch_or_tag_spec = m.groups()[0]
