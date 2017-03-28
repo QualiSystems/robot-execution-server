@@ -1,14 +1,16 @@
+import sys
+import os
 import getpass
 import json
 import subprocess
-import sys
 import time
-import os
 import logging
 import shutil
 import re
 import traceback
 from logging.handlers import RotatingFileHandler
+
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cloudshell-execution-server'))
 
 from cloudshell.custom_execution_server.custom_execution_server import CustomExecutionServer, CustomExecutionServerCommandHandler, PassedCommandResult, \
     FailedCommandResult, ErrorCommandResult, StoppedCommandResult
