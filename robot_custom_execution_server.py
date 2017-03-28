@@ -1,7 +1,5 @@
 import getpass
 import json
-import platform
-import signal
 import subprocess
 import sys
 import time
@@ -16,6 +14,7 @@ from cloudshell.custom_execution_server.custom_execution_server import CustomExe
     FailedCommandResult, ErrorCommandResult, StoppedCommandResult
 
 from cloudshell.custom_execution_server.daemon import become_daemon_and_wait
+from cloudshell.custom_execution_server.process_manager import ProcessRunner
 
 
 def string23(b):
@@ -50,7 +49,7 @@ jsonexample = '''Example config.json:
   "cloudshell_execution_server_name" : "MyCES1",
   "cloudshell_execution_server_description" : "Robot CES in Python",
   "cloudshell_execution_server_type" : "Robot",
-  "cloudshell_execution_server_capacity" : "5",
+  "cloudshell_execution_server_capacity" : 5,
 
   "log_directory": "/var/log",
   "log_level": "INFO",
@@ -159,63 +158,6 @@ postprocessing_command = o.get('postprocessing_command', '')
 default_checkout_version = o.get('git_default_checkout_version', '')
 
 
-class ProcessRunner():
-    def __init__(self, logger):
-        self._logger = logger
-        self._current_processes = {}
-        self._stopping_processes = []
-        self._running_on_windows = platform.system() == 'Windows'
-
-    def execute_throwing(self, command_list, identifier, env=None, directory=None):
-        o, c = self.execute(command_list, identifier, env=env, directory=directory)
-        if c:
-            s = 'Error: %d: %s failed: %s' % (c, command_list, o)
-            self._logger.error(s)
-            raise Exception(s)
-        return o, c
-
-    def execute(self, command_list, identifier, env=None, directory=None):
-        env = env or {}
-        if True:
-            pcommands = []
-            for command in command_list:
-                pcommand = command
-                pcommand = re.sub(r':[^@:]*@', ':(password hidden)@', pcommand)
-                pcommand = re.sub(r"CLOUDSHELL_PASSWORD:[^']*", 'CLOUDSHELL_PASSWORD:(password hidden)', pcommand)
-                pcommands.append(pcommand)
-            penv = dict(env)
-            if 'CLOUDSHELL_PASSWORD' in penv:
-                penv['CLOUDSHELL_PASSWORD'] = '(hidden)'
-
-            self._logger.debug('Execution %s: Running %s with env %s' % (identifier, pcommands, penv))
-        if self._running_on_windows:
-            process = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, env=env, cwd=directory)
-        else:
-            process = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False, preexec_fn=os.setsid, env=env, cwd=directory)
-        self._current_processes[identifier] = process
-        output = ''
-        for line in iter(process.stdout.readline, b''):
-            line = string23(line)
-            self._logger.debug('Output line: %s' % line)
-            output += line
-        process.communicate()
-        self._current_processes.pop(identifier, None)
-        if identifier in self._stopping_processes:
-            self._stopping_processes.remove(identifier)
-            return None, -6000
-        return output, process.returncode
-
-    def stop(self, identifier):
-        self._logger.info('Received stop command for %s' % identifier)
-        process = self._current_processes.get(identifier)
-        if process is not None:
-            self._stopping_processes.append(identifier)
-            if self._running_on_windows:
-                process.kill()
-            else:
-                os.killpg(process.pid, signal.SIGTERM)
-
-
 class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler):
 
     def __init__(self, logger):
@@ -224,10 +166,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
         self._process_runner = ProcessRunner(self._logger)
 
     def execute_command(self, test_path, test_arguments, execution_id, username, reservation_id, reservation_json, logger):
-        BADCHAR = r'[^-@%.,_a-zA-Z0-9 ]'
-        test_path = re.sub(BADCHAR, '_', test_path)
-
         logger.info('execute %s %s %s %s %s %s\n' % (test_path, test_arguments, execution_id, username, reservation_id, reservation_json))
+        if '..' in test_path:
+            raise Exception('Double dot not allowed in test path')
         try:
             now = time.strftime("%Y-%m-%d_%H.%M.%S")
             resinfo = json.loads(reservation_json) if reservation_json and reservation_json != 'None' else None
@@ -316,7 +257,8 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 tt += test_arguments.split(' ')
             # tt.append('-d')
             # tt.append(outdir)
-            tt += test_path.split(' ')
+            # tt += test_path.split(' ')
+            tt.append(test_path)
 
             try:
                 output, robotretcode = self._process_runner.execute(tt, execution_id, env={
