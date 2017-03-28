@@ -1,0 +1,3 @@
+[submodule "cloudshell-execution-server"]
+	path = cloudshell-execution-server
+	url = https://github.com/ericrqs/cloudshell-execution-server.git
