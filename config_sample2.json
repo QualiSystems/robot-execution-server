@@ -21,6 +21,7 @@
   "postprocessing_command": "/mnt/share1/scripts/postprocess.sh /mnt/share1/robot_logs/%R/%N_%V_%T.xml",
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/testsrepo",
-  "git_default_checkout_version": "master"
+  "git_default_checkout_version": "master",
+  "robot_environment_json": "{\"PYTHONPATH\": \"/home/jrobot/app/executions/libs/\"}"
 
 }

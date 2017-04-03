@@ -32,7 +32,7 @@ def input23(msg):
     else:
         return raw_input(msg)
 
-jsonexample = '''Example config.json:
+jsonexample = r'''Example config.json:
 {
   "cloudshell_server_address" : "192.168.2.108",
   "cloudshell_port": 8029,
@@ -65,7 +65,10 @@ jsonexample = '''Example config.json:
 
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj",
-  "git_default_checkout_version": "master"
+  "git_default_checkout_version": "master",
+  
+  "robot_environment_json": "{\"PYTHONPATH\": \"/home/jrobot/app/executions/libs/\"}"
+
 }
 // %R = reservation id
 // %V = version (tag, branch, or commit id)
@@ -156,6 +159,12 @@ delete_output = o.get('delete_output_after_run', False)
 archive_output_xml_to = o.get('archive_output_xml_to', '')
 postprocessing_command = o.get('postprocessing_command', '')
 default_checkout_version = o.get('git_default_checkout_version', '')
+env_json = o.get('robot_environment_json', '')
+
+if env_json:
+    env_json = json.loads(env_json)
+else:
+    env_json = None
 
 
 class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler):
@@ -261,7 +270,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
             tt.append(test_path)
 
             try:
-                output, robotretcode = self._process_runner.execute(tt, execution_id, env={
+                env = {
                     'CLOUDSHELL_RESERVATION_ID': reservation_id or 'None',
                     'CLOUDSHELL_SERVER_ADDRESS': cloudshell_server_address or 'None',
                     'CLOUDSHELL_SERVER_PORT': str(cloudshell_port) or 'None',
@@ -269,7 +278,10 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                     'CLOUDSHELL_PASSWORD': cloudshell_password or 'None',
                     'CLOUDSHELL_DOMAIN': cloudshell_domain or 'None',
                     'CLOUDSHELL_RESERVATION_INFO': reservation_json or 'None',
-                }, directory=outdir)
+                }
+                if env_json:
+                    env.update(env_json)
+                output, robotretcode = self._process_runner.execute(tt, execution_id, env=env, directory=outdir)
             except Exception as uue:
                 robotretcode = -5000
                 output = 'Robot crashed: %s: %s' % (str(uue), traceback.format_exc())
