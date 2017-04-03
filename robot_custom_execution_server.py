@@ -216,9 +216,9 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 if reservation_id:
                     fn = fn.replace('%R', reservation_id)
                 if test_path:
-                    fn = fn.replace('%N', test_path.replace('/', '_'))
+                    fn = fn.replace('%N', test_path.replace('/', '__').replace(' ', '_'))
                 if git_branch_or_tag_spec:
-                    fn = fn.replace('%V', git_branch_or_tag_spec.replace('/', '_'))
+                    fn = fn.replace('%V', git_branch_or_tag_spec.replace('/', '__').replace(' ', '_'))
                 return fn
 
             outdir = cdrip(unique_output_directory)
@@ -288,7 +288,7 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 self._logger.info('Copying %s/output.xml to %s' % (outdir, s))
                 shutil.copyfile('%s/output.xml' % outdir, s)
 
-            zipname = '%s_%s.zip' % (test_path.replace(' ', '_').replace('/', '_'), now)
+            zipname = '%s_%s.zip' % (test_path.replace(' ', '_').replace('/', '__'), now)
             try:
                 zipoutput, _ = self._process_runner.execute_throwing([
                     'zip', '-j',
