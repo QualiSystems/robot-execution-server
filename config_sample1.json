@@ -20,7 +20,7 @@
   "archive_output_xml_to": "/tmp/outdir/%R/%N_%V_%T.xml",
   "postprocessing_command": "/root/postprocess.sh /tmp/outdir/%R/%N_%V_%T.xml",
 
-  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git"
+  "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git",
   "robot_environment_json": "{\"PYTHONPATH\": \"/home/jrobot/app/executions/libs/\"}"
 
 }
