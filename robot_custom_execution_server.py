@@ -224,10 +224,14 @@ class MyCustomExecutionServerCommandHandler(CustomExecutionServerCommandHandler)
                 fn = fn.replace('%T', now)
                 if reservation_id:
                     fn = fn.replace('%R', reservation_id)
+                else:
+                    fn = fn.replace('%R', 'NO_RESERVATION')
                 if test_path:
                     fn = fn.replace('%N', test_path.replace('/', '__').replace(' ', '_'))
                 if git_branch_or_tag_spec:
                     fn = fn.replace('%V', git_branch_or_tag_spec.replace('/', '__').replace(' ', '_'))
+                if username:
+                    fn = fn.replace('%U', username)
                 return fn
 
             outdir = cdrip(unique_output_directory)
