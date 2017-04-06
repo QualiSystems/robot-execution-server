@@ -381,14 +381,20 @@ def daemon_stop():
     msgstopping = "Stopping execution server %s, please wait up to 2 minutes..." % server_name
     msgstopped = "Execution server %s finished shutting down" % server_name
     logger.info(msgstopping)
-    print (msgstopping)
+    try:
+        print (msgstopping)
+    except:
+        pass
     try:
         subprocess.call(['wall', msgstopping])
     except:
         pass
     server.stop()
     logger.info(msgstopped)
-    print (msgstopped)
+    try:
+        print (msgstopped)
+    except:
+        pass
     try:
         subprocess.call(['wall', msgstopped])
     except:
