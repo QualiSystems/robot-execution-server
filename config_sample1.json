@@ -15,10 +15,10 @@
   "log_level": "DEBUG",
   "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
-  "unique_output_directory": "/tmp/outdir/%R/%N_%V_%T",
+  "unique_output_directory": "/tmp/outdir/%R_%U/%N_%V_%T",
   "delete_output_after_run": false,
-  "archive_output_xml_to": "/tmp/outdir/%R/%N_%V_%T.xml",
-  "postprocessing_command": "/root/postprocess.sh /tmp/outdir/%R/%N_%V_%T.xml",
+  "archive_output_xml_to": "/tmp/outdir/%R_%U/%N_%V_%T.xml",
+  "postprocessing_command": "/root/postprocess.sh /tmp/outdir/%R_%U/%N_%V_%T.xml",
 
   "git_repo_url": "https://bitbucket.org/ericrqs/robot-tests.git",
   "robot_environment_json": "{\"PYTHONPATH\": \"/home/jrobot/app/executions/libs/\"}"

@@ -58,10 +58,10 @@ jsonexample = r'''Example config.json:
   // CRITICAL | ERROR | WARNING | INFO | DEBUG
   "log_filename": "<EXECUTION_SERVER_NAME>.log",
 
-  "unique_output_directory": "/mnt/share1/robot_output/%R/%N_%V_%T",
+  "unique_output_directory": "/mnt/share1/robot_output/%R_%U/%N_%V_%T",
   "delete_output_after_run": false,
-  "archive_output_xml_to": "/mnt/share1/robot_logs/%R/%N_%V_%T.xml",
-  "postprocessing_command": "/mnt/share1/scripts/postprocess.sh /mnt/share1/robot_logs/%R/%N_%V_%T.xml",
+  "archive_output_xml_to": "/mnt/share1/robot_logs/%R_%U/%N_%V_%T.xml",
+  "postprocessing_command": "/mnt/share1/scripts/postprocess.sh /mnt/share1/robot_logs/%R_%U/%N_%V_%T.xml",
 
 
   "git_repo_url": "https://<PROMPT_GIT_USERNAME>:<PROMPT_GIT_PASSWORD>@github.com/myuser/myproj",
@@ -73,6 +73,7 @@ jsonexample = r'''Example config.json:
 // %R = reservation id
 // %V = version (tag, branch, or commit id)
 // %N = test name
+// %U = CloudShell user who ran the test
 // %T = timestamp YYYY-MM-DD_hh.mm.ss
 
 Note: Remove all // comments before using
