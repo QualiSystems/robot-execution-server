@@ -44,3 +44,5 @@ $.ajax('https://api.bitbucket.org/1.0/repositories/Niam/libdodo/directory', {
         }
     }
 });
+
+return data;
